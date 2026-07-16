@@ -11,7 +11,7 @@
 
 # Overview
 
-CyberShield AI is a student-built cybersecurity and law enforcement intelligence platform developed as part of the ET Government Hackathon.
+CyberShield AI is a student-built cybersecurity and law enforcement intelligence platform developed as part of the ET Hackathon.
 
 The project combines Artificial Intelligence, Cybersecurity and Data Visualization to help investigators analyze crime-related information using an interactive dashboard.
 
