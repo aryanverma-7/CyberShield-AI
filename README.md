@@ -29,7 +29,7 @@ The project combines Artificial Intelligence, Cybersecurity and Data Visualizati
 
 ---
 
-# 🛠️ Technology Stack
+# Technology Stack
 
 | Technology | Purpose |
 |------------|----------|
@@ -42,10 +42,6 @@ The project combines Artificial Intelligence, Cybersecurity and Data Visualizati
 | Google Gemini API | AI Assistant |
 
 ---
-
-# Screenshots
-
-## Screenshots
 
 ## Screenshots
 
