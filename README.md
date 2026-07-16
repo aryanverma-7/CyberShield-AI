@@ -45,27 +45,19 @@ The project combines Artificial Intelligence, Cybersecurity and Data Visualizati
 
 # Screenshots
 
-## AI Copilot
+## Screenshots
 
-![AI Copilot](Screenshots/AI_Copilot.png)
+### AI Copilot
+<img src="./Screenshots/AI_Copilot.png" width="900"/>
 
----
+### Crime Heatmap
+<img src="./Screenshots/Crime_Heatmap.png" width="900"/>
 
-## Crime Heatmap
+### Dashboard
+<img src="./Screenshots/dashboard.png" width="900"/>
 
-![Crime Heatmap](Screenshots/Crime_Heatmap.png)
-
----
-
-## Dashboard
-
-![Dashboard](Screenshots/dashboard.png)
-
----
-
-## Threat Network
-
-![Threat Network](Screenshots/Threat_Network.png)
+### Threat Network
+<img src="./Screenshots/Threat_Network.png" width="900"/>
 
 ---
 
