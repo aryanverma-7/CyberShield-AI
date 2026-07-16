@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block page_title %}Citizen AI Copilot{% endblock %}
+
+{% block extra_head %}
+<style>
+    .chat-container {
+        height: 60vh;
+        overflow-y: auto;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        background: rgba(30, 41, 59, 0.2);
+        padding: 1.5rem;
+    }
+    .message-bubble {
+        max-width: 75%;
+        padding: 1rem;
+        border-radius: 16px;
+        margin-bottom: 1rem;
+        line-height: 1.5;
+    }
+    .msg-user {
+        background: var(--accent-blue);
+        color: white;
+        border-bottom-right-radius: 4px;
+        margin-left: auto;
+    }
+    .msg-bot {
+        background: var(--bg-card);
+        color: var(--text-main);
+        border-bottom-left-radius: 4px;
+        border: 1px solid var(--border-color);
+    }
+    .prompt-chip {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-color);
+        color: var(--text-muted);
+        border-radius: 20px;
+        padding: 6px 16px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-block;
+    }
+    .prompt-chip:hover {
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--accent-blue);
+        border-color: var(--accent-blue);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- Main Chat Column -->
+    <div class="col-lg-8" data-aos="fade-right">
+        <div class="glass-card p-4">
+            <div class="d-flex align-items-center justify-content-between border-bottom border-secondary pb-3 mb-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="bg-primary text-white p-2 rounded-circle"><i class="fa-solid fa-robot fs-5"></i></div>
+                    <div>
+                        <h6 class="text-white mb-0">CyberShield Legal Defense Assistant</h6>
+                        <small class="text-success"><i class="fa-solid fa-circle text-success fs-6 me-1"></i> RAG Knowledge Base Live</small>
+                    </div>
+                </div>
+                <button class="btn btn-outline-secondary btn-sm" onclick="clearChat()"><i class="fa-solid fa-trash-can"></i> Clear</button>
+            </div>
+
+            <!-- Chat Message Window -->
+            <div class="chat-container mb-3" id="chat-window">
+                <div class="message-bubble msg-bot">
+                    Hello! I am your CyberShield Safety Copilot. I can verify safety protocols, explain how to handle fraudulent calls, and search verified guidelines from RBI, CERT-In, and the NCRP. What can I help you check today?
+                </div>
+            </div>
+
+            <!-- Pre-baked Suggestion Chips -->
+            <div class="mb-3 d-flex flex-wrap gap-2">
+                <div class="prompt-chip" onclick="sendSuggested('Can police place me under digital arrest over video?')">Can police place me under digital arrest?</div>
+                <div class="prompt-chip" onclick="sendSuggested('What is the golden hour rule after a UPI scam?')">What is the golden hour rule?</div>
+                <div class="prompt-chip" onclick="sendSuggested('Can a bank demand my OTP for verification?')">Can a bank demand my OTP?</div>
+            </div>
+
+            <!-- Input Fields Pipeline -->
+            <div class="input-group">
+                <input type="text" id="user-input" class="form-control bg-dark text-white border-secondary py-2" placeholder="Ask about suspicious messages, digital arrest protocols...">
+                <button class="btn btn-primary px-4" id="send-btn" onclick="sendMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Citation/Side Information Panel -->
+    <div class="col-lg-4" data-aos="fade-left" data-aos-delay="100">
+        <div class="glass-card p-4 h-100">
+            <h5 class="text-white mb-3"><i class="fa-solid fa-bookmark text-gradient me-2"></i> Active Reference Material</h5>
+            <p class="text-muted small">When queries are analyzed, verified active sources from the vector index will be appended below to ensure total traceability.</p>
+            
+            <hr class="border-secondary">
+            
+            <div id="citation-list">
+                <span class="text-muted small italic">Awaiting source execution map...</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const chatWindow = document.getElementById('chat-window');
+
+    function appendMessage(text, isUser) {
+        const bubble = document.createElement('div');
+        bubble.className = `message-bubble ${isUser ? 'msg-user' : 'msg-bot'}`;
+        bubble.innerText = text;
+        chatWindow.appendChild(bubble);
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    function clearChat() {
+        chatWindow.innerHTML = '';
+        appendMessage("Chat session cleared. How can I assist you?", false);
+        document.getElementById('citation-list').innerHTML = '<span class="text-muted small italic">Awaiting source execution map...</span>';
+    }
+
+    function sendSuggested(text) {
+        document.getElementById('user-input').value = text;
+        sendMessage();
+    }
+
+    async function sendMessage() {
+        const inputField = document.getElementById('user-input');
+        const query = inputField.value.trim();
+        if (!query) return;
+
+        appendMessage(query, true);
+        inputField.value = '';
+        
+        // Disable triggers
+        document.getElementById('send-btn').disabled = true;
+
+        try {
+            const response = await fetch('{{ url_for("copilot.handle_chat_message") }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: json = JSON.stringify({ message: query })
+            });
+            const data = await response.json();
+
+            if (data.error) {
+                appendMessage("Error processing request: " + data.error, false);
+            } else {
+                appendMessage(data.answer, false);
+                
+                // Mount Citations
+                const citationBox = document.getElementById('citation-list');
+                citationBox.innerHTML = '';
+                if(data.citations && data.citations.length > 0) {
+                    data.citations.forEach(source => {
+                        citationBox.innerHTML += `
+                            <div class="p-2 mb-2 rounded bg-dark border border-secondary text-info small fw-bold">
+                                <i class="fa-solid fa-building-shield me-2"></i> ${source}
+                            </div>
+                        `;
+                    });
+                } else {
+                    citationBox.innerHTML = '<span class="text-muted small">No explicit document bounds cited. Using generalized safety heuristics.</span>';
+                }
+            }
+        } catch (error) {
+            console.error(error);
+            appendMessage("Unable to contact RAG vector pipeline.", false);
+        } finally {
+            document.getElementById('send-btn').disabled = false;
+        }
+    }
+
+    // Capture enter keys
+    document.getElementById('user-input').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') sendMessage();
+    });
+</script>
+{% endblock %}

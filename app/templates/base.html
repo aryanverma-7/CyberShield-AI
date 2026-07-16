@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title if title else 'CyberShield AI' }}</title>
+    
+    <!-- Framework Stylesheets -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    <!-- Hardened Glassmorphism Sidebar Core Layout Styles -->
+    <style>
+        :root {
+            --bg-dark-core: #080b11;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --card-glass: rgba(13, 19, 31, 0.8);
+        }
+        body {
+            background-color: var(--bg-dark-core);
+            color: #e2e8f0;
+            display: flex;
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+        }
+        .sidebar {
+            width: 260px;
+            background: #0d131f;
+            border-right: 1px solid var(--border-color);
+            padding: 24px 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+        }
+        .sidebar a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 24px;
+            color: #8a99ad;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            border-left: 4px solid transparent;
+        }
+        .sidebar a:hover, .sidebar a.active {
+            color: #fff;
+            background: rgba(13, 120, 212, 0.1);
+            border-left-color: #0078d4;
+        }
+        .main-content {
+            flex-grow: 1;
+            margin-left: 260px;
+            padding: 40px;
+            width: calc(100% - 260px);
+        }
+        .glass-card {
+            background: var(--card-glass);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+        .text-gradient {
+            background: linear-gradient(135deg, #0078d4 0%, #00a2ed 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+    <!-- Connected Dynamic Sidebar Navigation -->
+    <nav class="sidebar d-flex flex-column">
+        <div class="px-4 mb-4">
+            <h4 class="text-white fw-bold"><i class="fa-solid fa-shield-halved text-gradient me-2"></i>CyberShield</h4>
+            <small class="text-muted">Digital Public Safety</small>
+        </div>
+        
+        <a href="{{ url_for('dashboard.overview') }}" class="{% if request.endpoint == 'dashboard.overview' %}active{% endif %}">
+            <i class="fa-solid fa-chart-line"></i> Dashboard
+        </a>
+        <a href="{{ url_for('engine.fusion_ui') }}" class="{% if request.endpoint == 'engine.fusion_ui' %}active{% endif %}">
+            <i class="fa-solid fa-robot"></i> AI Engine Fusion
+        </a>
+        <a href="{{ url_for('dashboard.heatmap') }}" class="{% if request.endpoint == 'dashboard.heatmap' %}active{% endif %}">
+            <i class="fa-solid fa-map-location-dot"></i> Crime Heatmap
+        </a>
+        <a href="{{ url_for('network.visualize') }}" class="{% if request.endpoint == 'network.visualize' %}active{% endif %}">
+            <i class="fa-solid fa-network-wired"></i> Threat Network
+        </a>
+        <a href="#">
+            <i class="fa-solid fa-file-pdf"></i> Case Reports
+        </a>
+        <a href="{{ url_for('currency.interface') }}" class="{% if request.endpoint == 'currency.interface' %}active{% endif %}">
+            <i class="fa-solid fa-coins"></i> Currency Lab
+        </a>
+        <a href="{{ url_for('police.dashboard') }}" class="{% if request.endpoint == 'police.dashboard' %}active{% endif %}">
+            <i class="fa-solid fa-building-shield"></i> Law Enforcement Core
+        </a>
+        <a href="{{ url_for('copilot.chat_interface') }}" class="{% if request.endpoint == 'copilot.chat_interface' %}active{% endif %}">
+            <i class="fa-solid fa-robot"></i> Citizen Copilot
+        </a>
+        
+        <div class="mt-auto mb-4">
+            <a href="{{ url_for('auth.logout') }}" class="text-danger">
+                <i class="fa-solid fa-right-from-bracket"></i> Logout
+            </a>
+        </div>
+    </nav>
+
+    <!-- Content Workspace Wrapper Frame -->
+    <main class="main-content">
+        <!-- Top Operational Navbar Header -->
+        <header class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom" style="border-color: var(--border-color) !important;">
+            <h2 class="mb-0 text-white" data-aos="fade-right">{% block page_title %}Overview Operations{% endblock %}</h2>
+            <div class="user-profile d-flex align-items-center gap-3">
+                <span class="badge bg-primary px-3 py-2 rounded-pill"><i class="fa-solid fa-user-shield me-2"></i>Admin Access</span>
+                <img src="https://ui-avatars.com/api/?name=Admin&background=0D8ABC&color=fff" alt="User" class="rounded-circle" width="40">
+            </div>
+        </header>
+
+        <!-- Dynamic Content Engine Injection Node -->
+        {% block content %}
+        <div class="row g-4">
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+                <div class="glass-card p-4">
+                    <h6 class="text-muted text-uppercase mb-2">Threats Neutralized</h6>
+                    <h2 class="text-white mb-0">1,204 <small class="text-success fs-6"><i class="fa-solid fa-arrow-trend-up"></i> +12%</small></h2>
+                </div>
+            </div>
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+                <div class="glass-card p-4">
+                    <h6 class="text-muted text-uppercase mb-2">Active Investigations</h6>
+                    <h2 class="text-white mb-0">45 <small class="text-danger fs-6"><i class="fa-solid fa-triangle-exclamation"></i> High Risk</small></h2>
+                </div>
+            </div>
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
+                <div class="glass-card p-4">
+                    <h6 class="text-muted text-uppercase mb-2">System Status</h6>
+                    <h2 class="text-white mb-0">Operational <small class="text-success fs-6"><i class="fa-solid fa-circle-check"></i></small></h2>
+                </div>
+            </div>
+        </div>
+        {% endblock %}
+    </main>
+
+    <!-- Operational Script Intercept Components -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({ duration: 800, once: true });
+    </script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

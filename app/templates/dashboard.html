@@ -1,0 +1,593 @@
+{% extends "base.html" %}
+
+{% block page_title %}National Cyber Command Center{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* Theme Palette Variables */
+    :root {
+        --info-blue: #3b82f6;
+        --success-green: #10b981;
+        --warning-yellow: #f59e0b;
+        --critical-red: #ef4444;
+        --ai-purple: #8b5cf6;
+        --bg-slate: rgba(15, 23, 42, 0.6);
+        --border-slate: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Base Styling Enhancements */
+    .soc-card {
+        background: var(--bg-slate);
+        border: 1px solid var(--border-slate);
+        border-radius: 10px;
+        padding: 1.25rem;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        text-decoration: none;
+        display: block;
+        color: inherit;
+    }
+    .soc-card:hover {
+        border-color: var(--info-blue);
+        box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
+        transform: translateY(-2px);
+        color: inherit;
+    }
+    .soc-card-ai:hover {
+        border-color: var(--ai-purple);
+        box-shadow: 0 0 20px rgba(139, 92, 246, 0.15);
+    }
+    
+    /* Live Status Header Indicators */
+    .status-indicator-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 4px;
+    }
+    .pulse-glow-red {
+        animation: socPulse 1.8s infinite alternate;
+        box-shadow: 0 0 8px var(--critical-red);
+    }
+    .pulse-glow-purple {
+        animation: socPulse 1.5s infinite alternate;
+        box-shadow: 0 0 8px var(--ai-purple);
+    }
+    @keyframes socPulse {
+        0% { opacity: 0.4; transform: scale(0.9); }
+        100% { opacity: 1; transform: scale(1.1); }
+    }
+
+    /* Case Pipeline Funnel Flow */
+    .funnel-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        overflow-x: auto;
+        padding: 1rem 0;
+    }
+    .funnel-step {
+        background: rgba(30, 41, 59, 0.8);
+        border: 1px solid var(--border-slate);
+        border-radius: 6px;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.75rem;
+        text-align: center;
+        min-width: 100px;
+        position: relative;
+        font-weight: 500;
+    }
+    .funnel-step.active {
+        border-color: var(--ai-purple);
+        background: rgba(139, 92, 246, 0.1);
+    }
+    .funnel-arrow {
+        color: rgba(255, 255, 255, 0.2);
+        font-size: 0.8rem;
+        animation: walkArrow 2s infinite linear;
+    }
+
+    /* Floating Emergency Panel */
+    .floating-emergency-trigger {
+        position: fixed;
+        bottom: 25px;
+        right: 25px;
+        z-index: 9999;
+        background: linear-gradient(135deg, #b91c1c, #ef4444);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 10px 30px rgba(239, 68, 68, 0.4);
+        border-radius: 12px;
+        padding: 0.75rem 1.2rem;
+        transition: all 0.2s ease;
+    }
+    .floating-emergency-trigger:hover {
+        transform: scale(1.05);
+        box-shadow: 0 12px 35px rgba(239, 68, 68, 0.6);
+    }
+
+    /* Mini Progress Fill */
+    .progress-bar-purple {
+        background-color: var(--ai-purple);
+        box-shadow: 0 0 8px var(--ai-purple);
+    }
+
+    /* Custom Ticker Log Simulation */
+    .ticker-log-row {
+        font-size: 0.75rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        padding: 0.4rem 0;
+    }
+    .ticker-log-row:last-child { border: none; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- TOP SYSTEM STATUS & TELEMETRY DECK -->
+<div class="row g-2 mb-3 bg-dark p-2 rounded border border-secondary mx-0 align-items-center" style="font-size: 0.78rem;">
+    <!-- Live Operational Nodes -->
+    <div class="col-xl-6 col-lg-7 d-flex flex-wrap gap-3 font-monospace text-nowrap">
+        <div><span class="status-indicator-dot bg-purple pulse-glow-purple" style="background-color: var(--ai-purple);"></span><span class="text-muted">AI Engine:</span> <span style="color: var(--ai-purple);">ONLINE</span></div>
+        <div><span class="status-indicator-dot bg-danger pulse-glow-red" style="background-color: var(--critical-red);"></span><span class="text-muted">Threat Feed:</span> <span class="text-danger">LIVE</span></div>
+        <div><span class="status-indicator-dot bg-success" style="background-color: var(--success-green);"></span><span class="text-muted">Telecom API:</span> <span class="text-success">CONNECTED</span></div>
+        <div><span class="status-indicator-dot bg-success" style="background-color: var(--success-green);"></span><span class="text-muted">Bank Gateway:</span> <span class="text-success">ACTIVE</span></div>
+        <div><span class="status-indicator-dot bg-success" style="background-color: var(--success-green);"></span><span class="text-muted">NCRP:</span> <span class="text-success">CONNECTED</span></div>
+        <div class="text-muted border-start border-secondary ps-2"><i class="fa-solid fa-rotate-left me-1"></i>Sync <span id="sync-timer">0</span>s ago</div>
+    </div>
+    
+    <!-- Real-Time Hardware Performance Telemetry -->
+    <div class="col-xl-4 col-lg-5 d-flex gap-3 font-monospace text-muted ms-auto justify-content-lg-end text-nowrap">
+        <span>CPU <strong class="text-white">28%</strong></span>
+        <span>RAM <strong class="text-white">61%</strong></span>
+        <span>GPU <strong class="text-white">41%</strong></span>
+        <span>Latency <strong class="text-success">42 ms</strong></span>
+        <span>Queue <strong class="text-warning">18</strong></span>
+    </div>
+    
+    <!-- Dynamic Clock & Threat Level -->
+    <div class="col-xl-2 col-12 d-flex align-items-center justify-content-xl-end gap-3 mt-xl-0 mt-2 font-monospace border-xl-start border-secondary">
+        <div id="live-clock" class="text-info fw-bold">16 Jul 2026 12:41:43 IST</div>
+        <div class="px-2 py-0.5 rounded fw-bold text-dark text-center" style="background-color: var(--warning-yellow); min-width: 75px; font-size: 0.7rem;">
+            THREAT: ORANGE
+        </div>
+    </div>
+</div>
+
+<!-- GLOBAL ROUTING OMNI-SEARCH COMMAND -->
+<div class="mb-4" data-aos="fade-down">
+    <div class="input-group input-group-lg border border-secondary rounded overflow-hidden shadow">
+        <span class="input-group-text bg-dark text-muted border-0"><i class="fa-solid fa-magnifying-glass"></i></span>
+        <input type="text" class="form-control bg-dark text-white border-0 font-monospace" style="font-size: 0.95rem;" 
+               placeholder="Search Anything... (e.g., Phone, Wallet Address, Case ID, UPI String, Vehicle, Officer Name, Email Domain, FIR, Evidence Block, Victim Profile)">
+        <button class="btn btn-primary px-4 font-monospace" type="button" style="font-size: 0.85rem;">EXECUTE TRACE</button>
+    </div>
+</div>
+
+<!-- LIVE NOTIFICATION METRICS STRIP -->
+<div class="alert alert-dark border-secondary p-2 mb-4 d-flex align-items-center gap-3 overflow-hidden text-nowrap font-monospace" style="font-size: 0.75rem;">
+    <span class="badge bg-danger pulse-glow-red"><i class="fa-solid fa-bell me-1"></i> LOG FEED</span>
+    <marquee scrollamount="3" class="mb-0 text-muted">
+        <span class="mx-3 text-danger">🔴 Critical: New offshore digital arrest scam blueprint identified</span>
+        <span class="mx-3 text-warning">🟡 Transaction Blocked: Wallet 0x7a2... frozen securely via Interbank framework</span>
+        <span class="mx-3 text-success">🟢 Document Logged: FIR dynamic registry finalized for Case ID-8891</span>
+        <span class="mx-3 text-info">🔵 Node Assignment: Inspector Singh accepted high-priority crypto-laundering dossier</span>
+        <span class="mx-3 text-purple" style="color: var(--ai-purple);">🟣 System Evaluation: AI Model Confidence threshold updated to 98% for audio spoof payloads</span>
+    </marquee>
+</div>
+
+<!-- COMPREHENSIVE CASE BREAKDOWN & TRACKING CARDS -->
+<div class="row g-3 mb-4" data-aos="fade-up">
+    <!-- Case Volume Summary Status -->
+    <div class="col-xl-3 col-md-6">
+        <div class="soc-card">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <span class="text-muted text-uppercase font-monospace small tracking-wider">Citizen Telemetry Reports</span>
+                <span class="badge bg-info-subtle text-info font-monospace">+14% hr</span>
+            </div>
+            <h2 class="text-white font-monospace mb-2">72</h2>
+            <div class="row g-0 text-center font-monospace border-top border-secondary pt-2 mt-2" style="font-size: 0.7rem;">
+                <div class="col-3 border-end border-secondary"><span class="text-muted d-block">RCVD</span><strong class="text-white">72</strong></div>
+                <div class="col-3 border-end border-secondary"><span class="text-muted d-block">PROC</span><strong class="text-warning">18</strong></div>
+                <div class="col-3 border-end border-secondary"><span class="text-muted d-block">ASGN</span><strong class="text-info">15</strong></div>
+                <div class="col-3"><span class="text-muted d-block">RESL</span><strong class="text-success">39</strong></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active High Risk Vector Monitoring -->
+    <div class="col-xl-3 col-md-6">
+        <a href="{{ url_url if false else '/engine/fusion' }}" class="soc-card soc-card-ai">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <span class="text-muted text-uppercase font-monospace small tracking-wider">Digital Arrest Matrix</span>
+                <span class="badge bg-danger-subtle text-danger font-monospace">CRITICAL</span>
+            </div>
+            <h2 class="text-danger font-monospace mb-2">ACTIVE</h2>
+            <div class="text-muted font-monospace border-top border-secondary pt-2 mt-2" style="font-size: 0.7rem;">
+                <span>AI Fusion Core Routing Signature Confirmed</span>
+            </div>
+        </a>
+    </div>
+
+    <!-- Dynamic Inter-Agency Wallet Tracker -->
+    <div class="col-xl-3 col-md-6">
+        <a href="{{ url_url if false else '/currency/' }}" class="soc-card">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <span class="text-muted text-uppercase font-monospace small tracking-wider">Crypto Laundering Ledger</span>
+                <span class="badge bg-warning-subtle text-warning font-monospace">HIGH RISK</span>
+            </div>
+            <h2 class="text-warning font-monospace mb-2">23 <span class="fs-6 text-muted">Wallets</span></h2>
+            <div class="text-success font-monospace border-top border-secondary pt-2 mt-2" style="font-size: 0.7rem;">
+                <i class="fa-solid fa-shield-halved me-1"></i> 100% Interbank Ledger Isolation Verified
+            </div>
+        </a>
+    </div>
+
+    <!-- Certified Case File Repository -->
+    <div class="col-xl-3 col-md-6">
+        <div class="soc-card">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <span class="text-muted text-uppercase font-monospace small tracking-wider">Today's Dynamic FIRs</span>
+                <span class="text-success font-monospace small"><i class="fa-solid fa-arrow-trend-up"></i> 12%</span>
+            </div>
+            <h2 class="text-white font-monospace mb-2">18</h2>
+            <div class="d-flex justify-content-between text-muted font-monospace border-top border-secondary pt-2 mt-2" style="font-size: 0.7rem;">
+                <span>Yesterday Count: 16</span>
+                <span class="text-info">Auto-Archived</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CORE PIPELINE, RECOMMENDATIONS & LIVE LOG CONSOLE -->
+<div class="row g-3 mb-4">
+    <!-- Unified Case Investigation Pipeline Flow -->
+    <div class="col-xl-8" data-aos="fade-right">
+        <div class="soc-card h-100">
+            <h6 class="text-white mb-2"><i class="fa-solid fa-diagram-project text-info me-2"></i>Unified Case Investigation Pipeline</h6>
+            <p class="text-muted small mb-3">Real-time status tracking tracing active operations across the complete regulatory compliance chain.</p>
+            
+            <div class="funnel-container">
+                <div class="funnel-step active text-info border-info"><i class="fa-solid fa-folder-open d-block mb-1"></i>Report</div>
+                <div class="funnel-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+                <div class="funnel-step active text-purple" style="border-color: var(--ai-purple);"><i class="fa-solid fa-brain d-block mb-1"></i>AI Fusion</div>
+                <div class="funnel-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+                <div class="funnel-step"><i class="fa-solid fa-file-shield d-block mb-1"></i>Evidence</div>
+                <div class="funnel-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+                <div class="funnel-step"><i class="fa-solid fa-user-shield d-block mb-1"></i>Officer</div>
+                <div class="funnel-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+                <div class="funnel-step"><i class="fa-solid fa-building-columns d-block mb-1"></i>Bank Lock</div>
+                <div class="funnel-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+                <div class="funnel-step"><i class="fa-solid fa-gavel d-block mb-1"></i>FIR Filed</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Explainability & Action Framework -->
+    <div class="col-xl-4" data-aos="fade-left">
+        <div class="soc-card h-100 soc-card-ai" style="border-color: rgba(139, 92, 246, 0.2);">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="text-white mb-0"><i class="fa-solid fa-brain text-purple me-2" style="color: var(--ai-purple);"></i>AI Core Confidence Metric</h6>
+                <span class="badge bg-purple font-monospace" style="background-color: var(--ai-purple); color: #fff;">Gemini Engine</span>
+            </div>
+            
+            <div class="mb-3">
+                <div class="d-flex justify-content-between font-monospace small mb-1">
+                    <span class="text-muted">Target Probability Target</span>
+                    <strong style="color: var(--ai-purple);">98% Match Confirmed</strong>
+                </div>
+                <div class="progress bg-dark" style="height: 6px;">
+                    <div class="progress-bar progress-bar-purple" role="progressbar" style="width: 98%;"></div>
+                </div>
+                <div class="d-flex justify-content-between text-muted font-monospace xx-small mt-1" style="font-size:0.68rem;">
+                    <span>Processing Status: Realtime Stream</span>
+                    <span>Model Reference: Gemini 3.5 Flash</span>
+                </div>
+            </div>
+
+            <!-- Contextual Threat Action Strategy Recommendations -->
+            <div class="p-2 rounded bg-dark border border-secondary">
+                <span class="text-white font-monospace d-block small mb-2 text-uppercase tracking-wider" style="font-size: 0.7rem; color: var(--ai-purple) !important;"><i class="fa-solid fa-list-check me-1"></i>Recommended Response Strategy</span>
+                <div class="row g-2 font-monospace text-muted" style="font-size: 0.7rem;">
+                    <div class="col-6 text-success"><i class="fa-solid fa-square-check me-1"></i>Freeze Target Wallet</div>
+                    <div class="col-6 text-success"><i class="fa-solid fa-square-check me-1"></i>Notify Custodian Bank</div>
+                    <div class="col-6 text-success"><i class="fa-solid fa-square-check me-1"></i>Flag Telecom Nodes</div>
+                    <div class="col-6 text-success"><i class="fa-solid fa-square-check me-1"></i>Dispatch Field Cell</div>
+                    <div class="col-6 text-success"><i class="fa-solid fa-square-check me-1"></i>Compile Registry FIR</div>
+                    <div class="col-6 text-success"><i class="fa-solid fa-square-check me-1"></i>Seal Hash Evidence</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- REGIONAL MATRIX MAP, THREAT GRAPH INTERFACE & EVENT TIMELINE -->
+<div class="row g-3 mb-4">
+    <!-- Regional Nodal Incidents Density Feed -->
+    <div class="col-xl-4 col-md-6" data-aos="fade-up">
+        <a href="{{ url_url if false else '/dashboard/heatmap' }}" class="soc-card h-100">
+            <h6 class="text-white mb-2"><i class="fa-solid fa-map-location-dot text-success me-2"></i>Regional Incident Density Engine</h6>
+            <p class="text-muted small mb-3">Live geopolitical distribution mapping active operations across command sectors.</p>
+            
+            <div class="bg-dark p-3 rounded border border-secondary">
+                <div class="d-flex justify-content-between align-items-center mb-2 font-monospace border-bottom border-secondary pb-1">
+                    <span class="text-white fw-bold"><i class="fa-solid fa-building-flag me-2 text-muted"></i>National Sector India</span>
+                    <span class="badge bg-success">Live Track</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center small font-monospace py-1 text-muted">
+                    <span>Uttar Pradesh Node (UP Cyber Cell)</span>
+                    <span class="text-danger fw-bold">12 Incidents</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center small font-monospace py-1 text-muted">
+                    <span>Delhi NCR Command Sector</span>
+                    <span class="text-warning fw-bold">09 Incidents</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center small font-monospace py-1 text-muted">
+                    <span>Maharashtra Operations Base</span>
+                    <span class="text-info fw-bold">07 Incidents</span>
+                </div>
+            </div>
+            <div class="mt-3 text-center text-info small font-monospace">
+                <span>Access Full Visual Density Spectrum <i class="fa-solid fa-arrow-right ms-1"></i></span>
+            </div>
+        </a>
+    </div>
+
+    <!-- Graph Relationship Structure Preview Link -->
+    <div class="col-xl-4 col-md-6" data-aos="fade-up" data-aos-delay="100">
+        <a href="{{ url_url if false else '/network/visualize' }}" class="soc-card h-100">
+            <h6 class="text-white mb-2"><i class="fa-solid fa-circle-nodes text-info me-2"></i>Target Identity Graph Matrix</h6>
+            <p class="text-muted small mb-3">Relational link modeling analyzing connections across cross-layer intelligence infrastructure.</p>
+            
+            <div class="bg-dark p-3 rounded border border-secondary text-center font-monospace d-flex flex-column justify-content-center align-items-center" style="min-height: 125px;">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="badge bg-danger p-2">Mule Wallet</span>
+                    <i class="fa-solid fa-arrow-right-long text-muted"></i>
+                    <span class="badge bg-warning p-2">Burner SIM</span>
+                </div>
+                <i class="fa-solid fa-link-slash text-muted my-1 d-block"></i>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-info p-2">Victim Node</span>
+                    <i class="fa-solid fa-arrow-left-long text-muted"></i>
+                    <span class="badge bg-primary p-2">Gateway Route</span>
+                </div>
+            </div>
+            <div class="mt-3 text-center text-info small font-monospace">
+                <span>Initialize Full Structural Analysis Graph <i class="fa-solid fa-arrow-right ms-1"></i></span>
+            </div>
+        </a>
+    </div>
+
+    <!-- Active Incident Operational Logging Timeline -->
+    <div class="col-xl-4 col-12" data-aos="fade-up" data-aos-delay="200">
+        <div class="soc-card h-100">
+            <h6 class="text-white mb-3"><i class="fa-solid fa-receipt text-warning me-2"></i>Incident Operational Log Feed</h6>
+            <div class="bg-dark p-2 rounded border border-secondary font-monospace" id="ticker-log-container" style="max-height: 165px; overflow-y: hidden;">
+                <div class="ticker-log-row text-muted"><span class="text-info me-2">12:38:10</span> OCR processing completed for identity template payloads.</div>
+                <div class="ticker-log-row text-muted"><span class="text-info me-2">12:38:42</span> Conversational voice streams processed via NLP engine.</div>
+                <div class="ticker-log-row text-muted"><span class="text-info me-2">12:39:15</span> Regional threat map matrix recalculation complete.</div>
+                <div class="ticker-log-row text-muted"><span class="text-danger me-2">12:39:48</span> Interbank wallet freeze signal deployed successfully.</div>
+                <div class="ticker-log-row text-muted"><span class="text-success me-2">12:40:02</span> Case hash ledger signed and submitted to dynamic FIR database.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FORENSIC INTERROGATION ENGINE MATRIX -->
+<h5 class="text-white mb-3 font-monospace tracking-wide"><i class="fa-solid fa-screwdriver-wrench text-muted me-2"></i>Forensic Interrogation Engines</h5>
+<div class="row g-3 mb-4" data-aos="fade-up">
+    <!-- Telecom Analytics Framework -->
+    <div class="col-md-4 col-sm-6">
+        <div class="soc-card border-top border-3 border-primary">
+            <h6 class="text-white mb-2"><i class="fa-solid fa-phone-volume text-primary me-2"></i>Telecom Analytics Engine</h6>
+            <p class="text-muted small mb-2">Sim monitoring tracing suspicious cell connection routes.</p>
+            <span class="badge bg-danger-subtle text-danger font-monospace d-inline-block w-100 text-center py-2 mb-2"><i class="fa-solid fa-mask me-1"></i> Spoofing Vector Flagged</span>
+            <button class="btn btn-xs btn-outline-primary w-100 small py-1 font-monospace" style="font-size:0.75rem;">Inspect Call Log</button>
+        </div>
+    </div>
+
+    <!-- Communication Stream Inspection -->
+    <div class="col-md-4 col-sm-6">
+        <div class="soc-card border-top border-3 border-success">
+            <h6 class="text-white mb-2"><i class="fa-brands fa-whatsapp text-success me-2"></i>WhatsApp Phishing Inspector</h6>
+            <p class="text-muted small mb-2">Parsing metadata configurations for external messaging payloads.</p>
+            <span class="badge bg-danger-subtle text-danger font-monospace d-inline-block w-100 text-center py-2 mb-2"><i class="fa-solid fa-triangle-exclamation me-1"></i> Logo Spoof Match (96%)</span>
+            <button class="btn btn-xs btn-outline-success w-100 small py-1 font-monospace" style="font-size:0.75rem;">Analyze Screenshot</button>
+        </div>
+    </div>
+
+    <!-- Messaging Header Verification -->
+    <div class="col-md-4 col-sm-6">
+        <div class="soc-card border-top border-3 border-info">
+            <h6 class="text-white mb-2"><i class="fa-solid fa-envelope-open-text text-info me-2"></i>Email Fraud Deep Validator</h6>
+            <p class="text-muted small mb-2">Validating transport parameters for incoming mail strings.</p>
+            <span class="badge bg-success-subtle text-success font-monospace d-inline-block w-100 text-center py-2 mb-2"><i class="fa-solid fa-check-double me-1"></i> SECURE: SPF / DKIM Passed</span>
+            <button class="btn btn-xs btn-outline-info w-100 small py-1 font-monospace" style="font-size:0.75rem;">Parse Headers</button>
+        </div>
+    </div>
+
+    <!-- Scanned Code Integrity Scanner -->
+    <div class="col-md-4 col-sm-6">
+        <div class="soc-card border-top border-3 border-warning">
+            <h6 class="text-white mb-2"><i class="fa-solid fa-qrcode text-warning me-2"></i>QR Code Payload Decoder</h6>
+            <p class="text-muted small mb-2">Decoding integrated financial configuration scripts.</p>
+            <span class="badge bg-success-subtle text-success font-monospace d-inline-block w-100 text-center py-2 mb-2"><i class="fa-solid fa-shield me-1"></i> Destination Whitelisted</span>
+            <button class="btn btn-xs btn-outline-warning w-100 small py-1 font-monospace" style="font-size:0.75rem;">Decode QR String</button>
+        </div>
+    </div>
+
+    <!-- Voice Sample Threat Profiling -->
+    <div class="col-md-4 col-sm-6">
+        <div class="soc-card border-top border-3 border-danger">
+            <h6 class="text-white mb-2"><i class="fa-solid fa-waveform-lines text-danger me-2"></i>Voice Auditory Profile Scanner</h6>
+            <p class="text-muted small mb-2">Analyzing audio biometric data for coercive profiles.</p>
+            <span class="badge bg-danger-subtle text-danger font-monospace d-inline-block w-100 text-center py-2 mb-2"><i class="fa-solid fa-brain me-1"></i> Coercive Signature Match</span>
+            <button class="btn btn-xs btn-outline-danger w-100 small py-1 font-monospace" style="font-size:0.75rem;">Run Speech-To-Text</button>
+        </div>
+    </div>
+
+    <!-- Multilingual Dialect Processing Module -->
+    <div class="col-md-4 col-sm-6">
+        <div class="soc-card border-top border-3 border-secondary">
+            <h6 class="text-white mb-2"><i class="fa-solid fa-language text-muted me-2"></i>Linguistic Translation Engine</h6>
+            <p class="text-muted small mb-2">Processing localized syntax configurations across dialects.</p>
+            <select class="form-select form-select-sm bg-dark text-white border-secondary font-monospace mb-2" style="font-size:0.75rem;">
+                <option>English Core Platform</option>
+                <option>Hindi (हिन्दी)</option>
+                <option>Tamil (தமிழ்)</option>
+                <option>Telugu (తెలుగు)</option>
+                <option>Bengali (বাংলা)</option>
+                <option>Marathi (मराठी)</option>
+            </select>
+            <button class="btn btn-xs btn-outline-secondary text-white w-100 small py-1 font-monospace" style="font-size:0.75rem;">Apply Dialect Workspace</button>
+        </div>
+    </div>
+</div>
+
+<!-- INVESTIGATION TEAM & EVIDENCE LEDGER DATA -->
+<div class="row g-3 mb-4" data-aos="fade-up">
+    <!-- Nodal Response Units Distribution -->
+    <div class="col-lg-4 col-md-6">
+        <a href="{{ url_url if false else '/police/dashboard' }}" class="soc-card h-100">
+            <h6 class="text-white mb-3"><i class="fa-solid fa-user-shield text-info me-2"></i>Nodal Response Units</h6>
+            <div class="d-flex flex-column gap-2 font-monospace" style="font-size: 0.75rem;">
+                <div class="d-flex justify-content-between p-2 rounded bg-dark border border-secondary">
+                    <span class="text-white fw-bold">Inspector Singh (Cyber Cell Chief)</span>
+                    <span class="text-success"><i class="fa-solid fa-circle-dot me-1 small"></i>Online</span>
+                </div>
+                <div class="d-flex justify-content-between p-2 rounded bg-dark border border-secondary">
+                    <span class="text-white fw-bold">Inspector Verma (Field Taskforce)</span>
+                    <span class="text-warning"><i class="fa-solid fa-circle-dot me-1 small"></i>Busy</span>
+                </div>
+                <div class="d-flex justify-content-between p-2 rounded bg-dark border border-secondary">
+                    <span class="text-white fw-bold">Inspector Khan (Financial Desk)</span>
+                    <span class="text-success"><i class="fa-solid fa-circle-dot me-1 small"></i>Available</span>
+                </div>
+                <div class="d-flex justify-content-between p-2 rounded bg-dark border border-secondary">
+                    <span class="text-white fw-bold">Inspector Roy (Tactical Sector)</span>
+                    <span class="text-info"><i class="fa-solid fa-truck-moving me-1 small"></i>Field Deploy</span>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <!-- Cryptographic Verification Locker Storage -->
+    <div class="col-lg-4 col-md-6">
+        <div class="soc-card h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="text-white mb-0"><i class="fa-solid fa-box-archive text-warning me-2"></i>Cryptographic Evidence Locker</h6>
+                <span class="text-muted font-monospace small" style="font-size: 0.65rem;">SHA-256 Intact</span>
+            </div>
+            <p class="text-muted small mb-2">Vault holding verified case data, documents, and network traces.</p>
+            
+            <div class="row g-2 text-center font-monospace text-muted mb-2" style="font-size: 0.7rem;">
+                <div class="col-4"><div class="p-2 bg-dark rounded border border-secondary"><i class="fa-solid fa-file-image text-info d-block mb-1"></i>Screenshot (3)</div></div>
+                <div class="col-4"><div class="p-2 bg-dark rounded border border-secondary"><i class="fa-solid fa-file-audio text-warning d-block mb-1"></i>Audio (2)</div></div>
+                <div class="col-4"><div class="p-2 bg-dark rounded border border-secondary"><i class="fa-solid fa-message text-success d-block mb-1"></i>Chat Log (5)</div></div>
+                <div class="col-4"><div class="p-2 bg-dark rounded border border-secondary"><i class="fa-solid fa-qrcode text-danger d-block mb-1"></i>QR Payload (1)</div></div>
+                <div class="col-4"><div class="p-2 bg-dark rounded border border-secondary"><i class="fa-solid fa-file-pdf text-primary d-block mb-1"></i>PDF FIR (4)</div></div>
+                <div class="col-4"><div class="p-2 bg-dark rounded border border-secondary"><i class="fa-solid fa-video text-muted d-block mb-1"></i>Video Feed (1)</div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Citizen Assistance Core Entrypoint -->
+    <div class="col-lg-4 col-12">
+        <a href="{{ url_url if false else '/copilot/' }}" class="soc-card h-100 soc-card-ai" style="border-color: rgba(139, 92, 246, 0.2);">
+            <h6 class="text-white mb-2"><i class="fa-solid fa-robot text-purple me-2" style="color: var(--ai-purple);"></i>Citizen AI Assistance Interface</h6>
+            <p class="text-muted small mb-3">Public-facing portal processing statements, reports, and guidance via intelligent vector search models.</p>
+            
+            <div class="bg-dark p-3 rounded border border-secondary text-center">
+                <span class="d-block text-muted small font-monospace mb-2">Automated Public Verification Feed</span>
+                <span class="badge bg-purple-subtle font-monospace py-2 px-3 text-white" style="background-color: rgba(139, 92, 246, 0.15); border: 1px solid var(--ai-purple); font-size: 0.75rem;">
+                    <i class="fa-solid fa-comments me-2"></i>Open Citizen AI Copilot Session
+                </span>
+            </div>
+        </a>
+    </div>
+</div>
+
+<!-- EXPORT FORUM SUBMISSION SUITE -->
+<div class="soc-card p-3 mb-4 bg-dark">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+            <h6 class="text-white mb-0 font-monospace"><i class="fa-solid fa-file-shield text-success me-2"></i>Legal Chain of Custody Export Suite</h6>
+            <small class="text-muted">Generate certified documentation packets for presentation to judiciary frameworks.</small>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-success text-dark font-monospace fw-bold btn-sm" onclick="alert('Compiling Certified Case Chain of Custody... Blueprint ready.')">
+                <i class="fa-solid fa-download me-1"></i> Export Certified Case PDF
+            </button>
+            <button class="btn btn-outline-secondary text-white font-monospace btn-sm" onclick="alert('Exporting Encrypted JSON Hash Payload Log...')">
+                <i class="fa-solid fa-code me-1"></i> Export Cryptographic JSON Ledger
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- FIXED EMERGENCY SOS MITIGATION PANEL -->
+<div class="floating-emergency-trigger font-monospace text-white text-center" onclick="triggerGlobalEmergencySOS()">
+    <div style="font-size: 0.65rem; opacity: 0.85; letter-spacing: 1px;"><i class="fa-solid fa-shield-halved pulse-glow-red me-1"></i> EMERGENCY</div>
+    <div class="fw-bold fs-5 my-0.5">1930 CORE</div>
+    <div style="font-size: 0.65rem; opacity: 0.85; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 2px;">FREEZE IMMINENT TARGETS</div>
+</div>
+
+<!-- OPERATIONAL SCRIPTS AND SIMULATION ENGINES -->
+<script>
+    // Dynamic Real-Time Clock Implementation
+    function updateOperationalClock() {
+        const now = new Date();
+        const options = { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZoneName: 'short' };
+        document.getElementById('live-clock').innerText = now.toLocaleString('en-GB', options).replace(/,/g, '');
+    }
+    setInterval(updateOperationalClock, 1000);
+    updateOperationalClock();
+
+    // Incremental Sync Timer Simulation
+    let syncSeconds = 0;
+    setInterval(() => {
+        syncSeconds++;
+        if(syncSeconds > 30) syncSeconds = 0;
+        document.getElementById('sync-timer').innerText = syncSeconds;
+    }, 1000);
+
+    // Live Incident Log Append Animation Simulation
+    const operationalLogs = [
+        "Network telemetry nodes synchronized across Delhi central router.",
+        "Crypto asset trace map updated for wallet tracking array 0x9B1...",
+        "Automated OCR scan processed metadata verification tags.",
+        "Flagged incoming VOIP channel isolated via local telecom gateway.",
+        "Dynamic case database ledger archived under secure hash registry."
+    ];
+    
+    setInterval(() => {
+        const container = document.getElementById('ticker-log-container');
+        if(container) {
+            const randomLog = operationalLogs[Math.floor(Math.random() * operationalLogs.length)];
+            const timeStr = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            
+            const row = document.createElement('div');
+            row.className = "ticker-log-row text-muted opacity-0";
+            row.style.transition = "opacity 0.5s ease";
+            row.innerHTML = `<span class="text-info me-2">${timeStr}</span> ${randomLog}`;
+            
+            container.appendChild(row);
+            if(container.children.length > 6) {
+                container.removeChild(container.children[0]);
+            }
+            
+            setTimeout(() => { row.classList.remove('opacity-0'); }, 50);
+        }
+    }, 4500);
+
+    // Critical Emergency Mitigation Logic
+    function triggerGlobalEmergencySOS() {
+        if(confirm("CRITICAL PROTOCOL INTERVENTION REQUESTED.\n\nThis deployment invokes national cyber mitigation measures:\n1. Deploys instantaneous financial ledger freeze calls via 1930 data lines.\n2. Radiates immediate incident parameters directly to proximate regional Cyber Cells.\n\nConfirm executive operational deployment authorization?")) {
+            alert("Emergency operational signals deployed successfully. Target interbank gateways locked.");
+        }
+    }
+</script>
+
+{% endblock %}

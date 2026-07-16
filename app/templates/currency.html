@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Currency Lab - CyberShield AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cyberBg: '#0b1120',
+                        cyberPrimary: '#0ea5e9',
+                        cyberSuccess: '#22c55e',
+                        cyberWarning: '#f59e0b',
+                        cyberDanger: '#ef4444',
+                        cyberCard: '#111827',
+                        cyberBorder: '#1f2937'
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #0b1120; color: #cbd5e1; font-family: ui-sans-serif, system-ui, sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #0b1120; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #1f2937; border-radius: 2px; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .advanced-element { display: none; }
+        body.advanced-mode .advanced-element { display: block; }
+        .tooltip-container { position: relative; }
+    </style>
+</head>
+<body class="min-h-screen flex antialiased selection:bg-sky-500/30 selection:text-sky-200">
+
+    <!-- CLEANED LEFT SIDEBAR (ONLY CURRENCY LAB NAVIGATION CONTEXT EXITS) -->
+    <aside class="w-64 bg-gray-950 border-r border-cyberBorder flex flex-col justify-between shrink-0 z-20">
+        <div>
+            <div class="p-5 border-b border-cyberBorder">
+                <div class="flex items-center gap-3">
+                    <div class="bg-sky-600 p-2 rounded text-white"><i class="fa-solid fa-building-shield text-lg"></i></div>
+                    <div>
+                        <h1 class="font-bold text-sm uppercase tracking-wider text-white">CyberShield AI</h1>
+                        <p class="text-[10px] text-gray-500 tracking-widest font-mono">NATIONAL SECURITY LAYER</p>
+                    </div>
+                </div>
+            </div>
+            <nav class="p-3 space-y-0.5">
+                <div class="text-[10px] uppercase tracking-wider text-gray-500 px-3 pt-2 pb-1 font-mono font-bold">Dedicated Terminal</div>
+                <a href="#" class="flex items-center gap-2.5 px-3 py-2 text-sky-400 bg-sky-950/20 border-l-2 border-sky-500 text-xs font-semibold"><i class="fa-solid fa-coins"></i> Currency Lab Workspace</a>
+            </nav>
+        </div>
+        <div class="p-4 border-t border-cyberBorder bg-gray-900/40">
+            <p class="text-xs font-semibold text-white">Aryan Verma</p>
+            <p class="text-[9px] font-mono text-gray-500 uppercase">Cyber Cell Analyst</p>
+        </div>
+    </aside>
+
+    <!-- MAIN INTERFACE VIEWPORT CONTAINER -->
+    <div class="flex-1 flex flex-col min-w-0 overflow-x-hidden">
+        <header class="h-14 border-b border-cyberBorder bg-gray-950/90 backdrop-blur flex items-center justify-between px-6 z-10 sticky top-0">
+            <div class="relative w-72">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs"></i>
+                <input type="text" placeholder="Global system lookup identifier..." class="w-full bg-gray-900 border border-cyberBorder rounded pl-9 pr-4 py-1.5 text-xs text-white focus:outline-none focus:border-sky-500" disabled>
+            </div>
+            
+            <!-- ITEM 20: INVESTIGATION MODE CONTROL TOGGLE -->
+            <div class="flex items-center gap-4">
+                <div class="flex items-center bg-gray-900 border border-cyberBorder p-0.5 rounded text-xs">
+                    <button id="btnModeBasic" onclick="setInvestigationMode('basic')" class="px-3 py-1 bg-sky-600 text-white rounded font-medium transition">Basic Mode</button>
+                    <button id="btnModeAdvanced" onclick="setInvestigationMode('advanced')" class="px-3 py-1 text-gray-400 rounded font-medium transition">Advanced Mode</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-6 space-y-6">
+            
+            <!-- ITEM 5: MINI FORENSIC ANALYTICS COMPONENT -->
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div class="bg-cyberCard border border-cyberBorder rounded p-3.5" title="Total active decentralized ledger public keys mapped by system registries.">
+                    <p class="text-[10px] font-mono uppercase tracking-wider text-gray-500">Wallets Checked</p>
+                    <p class="text-xl font-bold text-white mt-1">482</p>
+                </div>
+                <div class="bg-cyberCard border border-cyberBorder rounded p-3.5" title="Total physical fiat currency bills evaluated via optical scanning modules.">
+                    <p class="text-[10px] font-mono uppercase tracking-wider text-gray-500">Notes Verified</p>
+                    <p class="text-xl font-bold text-white mt-1">219</p>
+                </div>
+                <div class="bg-cyberCard border border-cyberBorder rounded p-3.5" title="Confirmed high-risk anomalous notes confirmed fake by vision check layers.">
+                    <p class="text-[10px] font-mono uppercase tracking-wider text-gray-500">Fake Notes</p>
+                    <p class="text-xl font-bold text-cyberDanger mt-1">18</p>
+                </div>
+                <div class="bg-cyberCard border border-cyberBorder rounded p-3.5" title="Ongoing open case entries tied to distributed ledger exploits.">
+                    <p class="text-[10px] font-mono uppercase tracking-wider text-gray-500">Crypto Cases</p>
+                    <p class="text-xl font-bold text-sky-400 mt-1">71</p>
+                </div>
+                <div class="bg-cyberCard border border-cyberBorder rounded p-3.5 col-span-2 md:col-span-1" title="Estimated global economic value preserved across all currency investigations.">
+                    <p class="text-[10px] font-mono uppercase tracking-wider text-gray-500">Recovered Assets</p>
+                    <p class="text-xl font-bold text-cyberSuccess mt-1">₹1.8 Cr</p>
+                </div>
+            </div>
+
+            <!-- CORE LAB PAGE HEADER DESCRIPTIVE TITLE -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-t border-gray-900 pt-4">
+                <div>
+                    <h2 class="text-lg font-bold text-white">Currency Forensic Workspace Layer</h2>
+                    <p class="text-xs text-gray-400 mt-0.5">Automated asset tracing pipeline across public blockchains and banknote verification architectures.</p>
+                </div>
+                
+                <!-- ITEM 1: WORKFLOW PROGRESS PIPELINE COMPONENT -->
+                <div class="bg-gray-950 px-4 py-2 rounded border border-cyberBorder">
+                    <div class="flex items-center gap-2 text-[10px] font-mono tracking-wider font-bold">
+                        <span id="step-upload" class="text-gray-500">✓ Evidence</span> <i class="fa-solid fa-angle-right text-gray-700"></i>
+                        <span id="step-ocr" class="text-gray-500">✓ OCR</span> <i class="fa-solid fa-angle-right text-gray-700"></i>
+                        <span id="step-ai" class="text-gray-500">✓ AI Analysis</span> <i class="fa-solid fa-angle-right text-gray-700"></i>
+                        <span id="step-review" class="text-cyberWarning animate-pulse">🟡 Officer Review</span> <i class="fa-solid fa-angle-right text-gray-700"></i>
+                        <span id="step-closed" class="text-gray-600">⬜ Closed</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- WORKSPACE INTERFACE NAVIGATIONAL TAB TOGGLE -->
+            <div class="border-b border-cyberBorder">
+                <ul class="flex text-xs font-medium text-gray-400">
+                    <li class="mr-2">
+                        <button onclick="switchWorkspaceTab('crypto-tab', this)" class="tab-btn inline-block p-3 text-sky-400 border-b-2 border-sky-500 font-bold">
+                            <i class="fa-solid fa-network-wired mr-1.5"></i>Digital Asset Tracker
+                        </button>
+                    </li>
+                    <li class="mr-2">
+                        <button onclick="switchWorkspaceTab('fiat-tab', this)" class="tab-btn inline-block p-3 border-b-2 border-transparent hover:text-gray-300 transition">
+                            <i class="fa-solid fa-money-bill-check mr-1.5"></i>Counterfeit Banknote Checker
+                        </button>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- WORKSPACE PANEL 1: CRYPTO INTELLIGENCE VIEW -->
+            <div id="crypto-tab" class="tab-content active space-y-6">
+                <!-- Blockchain Input Platform Card -->
+                <div class="bg-cyberCard border border-cyberBorder rounded p-4">
+                    <div class="flex flex-col lg:flex-row gap-4">
+                        <input type="text" id="blockchainInputHash" value="0x71C99B70C4611d4C8c11d4C8c11d4C8c11d4C8c11d4C8c11d4C8c11d4C8c11d4C8" placeholder="Enter transaction or wallet node address signature string..." class="flex-1 bg-gray-950 border border-cyberBorder rounded p-3 text-xs font-mono text-sky-400 focus:outline-none focus:border-sky-500">
+                        <select id="blockchainNetworkSelect" class="bg-gray-950 border border-cyberBorder text-xs text-white rounded p-3 outline-none focus:border-sky-500">
+                            <option value="Ethereum" selected>Ethereum (ERC-20)</option>
+                            <option value="Bitcoin">Bitcoin Mainnet</option>
+                        </select>
+                        <button onclick="executeBlockchainAnalysis()" class="bg-sky-600 hover:bg-sky-500 text-white text-xs px-5 py-3 rounded font-medium transition flex items-center gap-2">
+                            <i class="fa-solid fa-bolt"></i> Run Deep Scan
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ITEM 17: CRYPTO EMPTY STATE VIEW CONTAINER -->
+                <div id="cryptoEmptyState" class="hidden text-center py-12 bg-cyberCard border border-cyberBorder rounded border-dashed">
+                    <i class="fa-solid fa-wallet text-3xl text-gray-600 mb-3"></i>
+                    <p class="text-sm text-gray-300 font-medium">No active crypto target analyzed yet</p>
+                    <p class="text-xs text-gray-500 mt-1">Paste a target transaction signature address hash above to instantiate telemetry logic.</p>
+                </div>
+
+                <!-- Core Crypto Output Workspace Grid Layout -->
+                <div id="cryptoMainContent" class="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
+                    <div class="xl:col-span-2 space-y-6">
+                        
+                        <!-- Core Details Metadata Display Card -->
+                        <div class="bg-cyberCard border border-cyberBorder rounded p-5 space-y-4">
+                            <div class="flex items-center justify-between border-b border-cyberBorder pb-3">
+                                <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-white">Forensic Telemetry Metrics</h3>
+                                
+                                <!-- ITEM 14: STANDARDIZED RISK LABELS -->
+                                <div class="flex items-center gap-2">
+                                    <span class="text-[10px] text-gray-500 uppercase font-sans font-medium">Risk Level:</span>
+                                    <span id="cryptoRiskLabel" class="px-2 py-0.5 rounded bg-red-950 text-cyberDanger text-[10px] font-mono font-bold border border-red-900/50">Critical</span>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs font-mono">
+                                <div><p class="text-gray-500 font-sans">Amount Transferred</p><p id="cryptoAmountVal" class="text-sm font-bold text-white mt-0.5">2.13 BTC</p></div>
+                                <div><p class="text-gray-500 font-sans">Timestamp (UTC)</p><p id="cryptoTimeVal" class="text-sm text-gray-200 mt-0.5">15 Jul 2026 14:32</p></div>
+                                <div><p class="text-gray-500 font-sans" title="System computation index parameters">Network Gas Fee</p><p id="cryptoFeeVal" class="text-sm text-gray-300 mt-0.5">0.00041 BTC</p></div>
+                                <div class="sm:col-span-3 h-[1px] bg-gray-800/60"></div>
+                                <div class="sm:col-span-2">
+                                    <p class="text-gray-500 font-sans">Sender Hash Ingestion Node</p>
+                                    <p id="cryptoSenderNode" class="text-[11px] text-sky-400 bg-gray-950 p-2 rounded border border-gray-900 mt-1 truncate select-all">bc1q9x7k5v4g2h...n3l8p0z5w2e7q6r4y9</p>
+                                </div>
+                                <div>
+                                    <!-- ITEM 19: DETAILED usability HELP TOOLTIP -->
+                                    <p class="text-gray-500 font-sans cursor-help underline decoration-dotted" title="The specific cumulative cryptographic block sequence height position where this transactional node matrix was verified.">Block Height <i class="fa-solid fa-circle-question text-[9px] text-gray-600"></i></p>
+                                    <p id="cryptoBlockVal" class="text-sm font-bold text-gray-300 mt-1.5">#902121</p>
+                                </div>
+                            </div>
+
+                            <!-- ITEM 15: TECHNICAL DEPTH DETECTION ENGINES -->
+                            <div class="pt-3 border-t border-gray-800/80">
+                                <p class="text-[10px] font-mono uppercase tracking-wider text-gray-500 mb-1.5">Detection Engine Pipeline</p>
+                                <div id="cryptoEngineBadges" class="flex flex-wrap gap-1.5 text-[10px]">
+                                    <span class="px-2 py-0.5 rounded bg-gray-900 text-gray-300 border border-gray-800">Blockchain Intelligence</span>
+                                    <span class="px-2 py-0.5 rounded bg-gray-900 text-gray-300 border border-gray-800">Graph Analysis</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ITEM 3: STRUCTURED AI EXPLANATION CARD COMPONENT -->
+                        <div class="bg-cyberCard border border-cyberBorder rounded p-5 space-y-3">
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-white font-mono"><i class="fa-solid fa-brain text-sky-400 mr-2"></i>Why AI Flagged This Matrix Node</h3>
+                            <ul id="cryptoAiFlagsContainer" class="space-y-1.5 text-xs text-gray-300 font-mono">
+                                <li class="flex items-start gap-2 text-cyberDanger"><i class="fa-solid fa-circle-xmark mt-0.5"></i> Connected to 12 wallets</li>
+                                <li class="flex items-start gap-2 text-cyberDanger"><i class="fa-solid fa-circle-xmark mt-0.5"></i> Passed through 2 mixers</li>
+                                <li class="flex items-start gap-2 text-cyberDanger"><i class="fa-solid fa-circle-xmark mt-0.5"></i> High velocity splitting transaction index</li>
+                            </ul>
+                        </div>
+
+                        <!-- ITEM 9: EMBEDDED DYNAMIC NETWORK PREVIEW PANEL -->
+                        <div class="bg-cyberCard border border-cyberBorder rounded p-5 space-y-4">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-xs font-bold uppercase tracking-wider text-white font-mono"><i class="fa-solid fa-diagram-project text-sky-400 mr-2"></i>Structural Asset Route Mapping Preview</h3>
+                                <button class="text-[10px] font-mono text-sky-400 hover:underline"><i class="fa-solid fa-expand mr-1"></i> Open Full Graph Network</button>
+                            </div>
+                            <div class="bg-gray-950 p-4 rounded border border-gray-900 flex flex-col sm:flex-row items-center justify-center gap-4 text-xs font-mono py-6">
+                                <div class="bg-gray-900 px-3 py-1.5 rounded border border-gray-800 text-center w-32"><i class="fa-solid fa-wallet text-sky-400 mr-1"></i> Wallet Source</div>
+                                <i class="fa-solid fa-arrow-right text-gray-600 rotate-90 sm:rotate-0"></i>
+                                <div class="bg-red-950/40 px-3 py-1.5 rounded border border-red-900/40 text-cyberDanger text-center w-32"><i class="fa-solid fa-shuffle mr-1"></i> Mixer Pool</div>
+                                <i class="fa-solid fa-arrow-right text-gray-600 rotate-90 sm:rotate-0"></i>
+                                <div class="bg-gray-900 px-3 py-1.5 rounded border border-gray-800 text-center w-32"><i class="fa-solid fa-building-columns mr-1"></i> Exchange</div>
+                                <i class="fa-solid fa-arrow-right text-gray-600 rotate-90 sm:rotate-0"></i>
+                                <div class="bg-gray-900 px-3 py-1.5 rounded border border-emerald-900/40 text-cyberSuccess text-center w-32"><i class="fa-solid fa-flag-checkered mr-1"></i> Destination</div>
+                            </div>
+                        </div>
+
+                        <!-- ITEM 8: FORENSIC CORE AI ACTION RECOMMENDATIONS -->
+                        <div class="bg-cyberCard border border-cyberBorder rounded p-5 space-y-3">
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-white font-mono"><i class="fa-solid fa-shield-halved text-cyberSuccess mr-2"></i>Recommended Cyber Command Actions</h3>
+                            <div id="cryptoRecommendations" class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-mono">
+                                <div class="bg-gray-950 p-2 rounded border border-gray-900 flex items-center gap-2 text-cyberSuccess"><i class="fa-solid fa-square-check"></i> Freeze target routing wallet</div>
+                                <div class="bg-gray-950 p-2 rounded border border-gray-900 flex items-center gap-2 text-cyberSuccess"><i class="fa-solid fa-square-check"></i> Notify host exchange node</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Side Grid: Threat Gauge Indicators -->
+                    <div class="space-y-6">
+                        <!-- ITEM 2: DETAILED SYSTEM VISUAL THREAT INDEX GAUGE -->
+                        <div class="bg-cyberCard border border-cyberBorder rounded p-5 space-y-4">
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-white font-mono">Threat Vector Index</h3>
+                            <div class="space-y-2">
+                                <div class="flex justify-between text-xs font-mono">
+                                    <span class="text-gray-400">Threat Matrix Score</span>
+                                    <span id="cryptoThreatPct" class="font-bold text-cyberDanger">91%</span>
+                                </div>
+                                <div class="w-full bg-gray-950 rounded-full h-2.5 overflow-hidden border border-gray-900 flex">
+                                    <div id="cryptoThreatBar" class="bg-gradient-to-r from-amber-500 to-red-500 h-full rounded-full" style="width: 91%"></div>
+                                </div>
+                                <p class="text-[10px] text-gray-500 font-mono tracking-wide text-right uppercase">Threat Classification: Critical</p>
+                            </div>
+                        </div>
+
+                        <!-- ITEM 16: UNIFIED SYSTEM CONFIDENCE ANALYTICS MAPPING CARD -->
+                        <div class="bg-cyberCard border border-cyberBorder rounded p-5 space-y-3">
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-white font-mono">Unified AI Confidence Matrix</h3>
+                            <div class="space-y-2.5 text-xs font-mono">
+                                <div class="flex justify-between py-1 border-b border-gray-800/40">
+                                    <span class="text-gray-400">OCR Text Verification</span>
+                                    <span id="cryptoConfOcr" class="text-white font-bold">98%</span>
+                                </div>
+                                <div class="flex justify-between py-1 border-b border-gray-800/40">
+                                    <span class="text-gray-400">Vision Texture Engine</span>
+                                    <span id="cryptoConfVision" class="text-white font-bold">96%</span>
+                                </div>
+                                <div class="flex justify-between py-1 border-b border-gray-800/40">
+                                    <span class="text-gray-400">Graph Correlation Node</span>
+                                    <span id="cryptoConfGraph" class="text-white font-bold">94%</span>
+                                </div>
+                                <div class="flex justify-between p-2 rounded bg-sky-950/20 border border-sky-900/40 text-sky-400 font-bold mt-2">
+                                    <span>Overall Unified Index</span>
+                                    <span id="cryptoConfOverall">97%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ADVANCED LEVEL PARAMETER DETAILS SYSTEM DATA WRAPPER PANEL -->
+                        <div class="advanced-element bg-cyberCard border border-sky-900/50 rounded p-5 space-y-3 bg-gradient-to-b from-gray-950 to-gray-900">
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-sky-400 font-mono flex items-center gap-1.5"><i class="fa-solid fa-bug"></i> System Engine Metadata</h3>
+                            <div class="text-[10px] font-mono text-gray-400 space-y-1 bg-gray-950 p-2.5 rounded border border-gray-900">
+                                <p><span class="text-sky-500">Core Telemetry Architecture:</span> Linux-x86_64</p>
+                                <p><span class="text-sky-500">Node Processor Context:</span> Thread-Pool-Active</p>
+                                <p><span class="text-sky-500">Vector Index Engine:</span> FAISS-CPU-Server-V4</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- WORKSPACE PANEL 2: FIAT COUNTERFEIT VERIFICATION PANEL -->
+            <div id="fiat-tab" class="tab-content space-y-6">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    
+                    <!-- Form Input and Physical Ingestion Control Card -->
+                    <div class="bg-cyberCard border border-cyberBorder rounded p-5 space-y-4 shadow-lg">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-white font-mono border-b border-cyberBorder pb-2"><i class="fa-solid fa-cash-register text-sky-400 mr-2"></i>Banknote Verification Scanner</h3>
+                        
+                        <div onclick="document.getElementById('noteImageUpload').click()" class="border-2 border-dashed border-gray-800 hover:border-sky-500/40 bg-gray-950/60 rounded p-5 text-center cursor-pointer transition">
+                            <i class="fa-solid fa-money-bill-transfer text-xl text-gray-500 mb-1.5"></i>
+                            <p class="text-xs text-gray-300 font-medium">Capture or Drop Banknote Image File</p>
+                            <input type="file" id="noteImageUpload" class="hidden" onchange="simulateNoteScanUpload()">
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="block text-[11px] font-mono uppercase text-gray-400">Extracted Serial Number Registry</label>
+                            <input type="text" id="noteSerialInput" value="4CD-404928" class="w-full bg-gray-950 border border-cyberBorder rounded p-2.5 text-xs font-mono text-sky-400 uppercase">
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="block text-[11px] font-mono uppercase text-gray-400">Note Denomination Value</label>
+                            <select id="noteDenominationSelect" class="w-full bg-gray-950 border border-cyberBorder rounded p-2.5 text-xs text-white outline-none">
+                                <option value="2000" selected>₹ 2000 Currency Note</option>
+                                <option value="500">₹ 500 Currency Note</option>
+                            </select>
+                        </div>
+
+                        <button onclick="executeBanknoteVerification()" class="w-full bg-sky-600 hover:bg-sky-500 text-white font-medium text-xs py-2.5 rounded transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-magnifying-glass-dollar"></i> Authenticate Banknote Security Layer
+                        </button>
+                    </div>
+
+                    <!-- Scan Telemetry Results Output Matrix Display Area -->
+                    <div class="lg:col-span-2 space-y-6">
+                        
+                        <!-- ITEM 17: FIAT EMPTY STATE ARCHITECTURE CARD -->
+                        <div id="fiatEmptyState" class="hidden text-center py-20 bg-cyberCard border border-cyberBorder rounded border-dashed">
+                            <i class="fa-solid fa-money-bill text-3xl text-gray-600 mb-3"></i>
+                            <p class="text-sm text-gray-300 font-medium">No banknote asset loaded for analysis</p>
+                            <p class="text-xs text-gray-500 mt-1">Upload an image file layer or input serial telemetry details to proceed with checking.</p>
+                        </div>
+
+                        <div id="fiatMainContent" class="space-y-6">
+                            
+                            <!-- Detailed Metric Results Panel -->
+                            <div class="bg-cyberCard border border-cyberBorder rounded p-5 space-y-4">
+                                <div class="flex items-center justify-between border-b border-cyberBorder pb-3">
+                                    <h3 class="text-xs font-mono font-bold text-white uppercase tracking-wider">Security Validation Logs</h3>
+                                    
+                                    <div class="flex items-center gap-4">
+                                        <!-- ITEM 14: RISK STANDARDIZATION SCALE -->
+                                        <div class="text-xs font-mono flex items-center gap-1.5">
+                                            <span class="text-gray-500 font-sans">Risk Level:</span>
+                                            <span id="noteRiskLabel" class="text-cyberDanger font-bold">Critical</span>
+                                        </div>
+                                        <span id="noteVerdictBadge" class="px-2.5 py-1 rounded bg-red-950 text-cyberDanger text-xs font-bold border border-red-900/60 tracking-wider">COUNTERFEIT FLAGGED</span>
+                                    </div>
+                                </div>
+
+                                <!-- ITEM 10: RICH COUNTERFEIT INGESTION PARAMETER CHECKLISTS -->
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono bg-gray-950 p-3 rounded border border-gray-900">
+                                    <div><span class="text-gray-500 block font-sans">Detected Value</span><strong id="noteResDenom" class="text-white text-sm">₹ 2000</strong></div>
+                                    <div><span class="text-gray-500 block font-sans">Year Variant</span><strong id="noteResYear" class="text-gray-300 text-sm">2020</strong></div>
+                                    <div><span class="text-gray-500 block font-sans">Series Mapped</span><strong id="noteResSeries" class="text-gray-300 text-sm">MG New Series</strong></div>
+                                    <div><span class="text-gray-500 block font-sans">Threat Score</span><strong id="noteResThreatScore" class="text-cyberDanger text-sm">87%</strong></div>
+                                </div>
+
+                                <!-- Specific Security Feature Verification Array Elements -->
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                                    <!-- ITEM 13: PREVENT RAW UNDEFINED MAPPINGS BY SYSTEM FALLBACK LABELS -->
+                                    <div class="bg-gray-950 border border-cyberBorder rounded p-3 flex justify-between items-center">
+                                        <span class="text-gray-400 font-sans"><i class="fa-solid fa-fingerprint text-sky-400 mr-2"></i>Watermark Window</span>
+                                        <span id="featureWatermark" class="font-mono text-[11px] font-bold text-cyberSuccess">Verified</span>
+                                    </div>
+                                    <div class="bg-gray-950 border border-cyberBorder rounded p-3 flex justify-between items-center">
+                                        <span class="text-gray-400 font-sans"><i class="fa-solid fa-lines-leaning text-sky-400 mr-2"></i>Security Thread Line</span>
+                                        <span id="featureSecurityThread" class="font-mono text-[11px] font-bold text-cyberSuccess">Verified</span>
+                                    </div>
+                                    <div class="bg-gray-950 border border-cyberBorder rounded p-3 flex justify-between items-center">
+                                        <span class="text-gray-400 font-sans"><i class="fa-solid fa-wave-square text-sky-400 mr-2"></i>Intaglio Friction Printing</span>
+                                        <!-- Fallback example handled cleanly without returning any standard JS system errors -->
+                                        <span id="featureIntaglio" class="font-mono text-[11px] font-bold text-cyberWarning">Not Detected</span>
+                                    </div>
+                                    <div class="bg-gray-950 border border-cyberBorder rounded p-3 flex justify-between items-center">
+                                        <span class="text-gray-400 font-sans"><i class="fa-solid fa-font text-sky-400 mr-2"></i>Micro-Printing Typo</span>
+                                        <span id="featureMicrotext" class="font-mono text-[11px] font-bold text-cyberDanger">Missing</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ITEM 4 & ITEM 11: VISUAL EVIDENCE UPLOAD CARD & IMAGE RECTANGLE COMPARISON MATRIX -->
+                            <div class="bg-cyberCard border border-cyberBorder rounded p-5 space-y-4">
+                                <h3 class="text-xs font-bold uppercase tracking-wider text-white font-mono"><i class="fa-solid fa-images text-sky-400 mr-2"></i>Forensic Image Alignment Scan Comparison</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-center text-[10px] font-mono">
+                                    <div class="bg-gray-950 border border-cyberBorder p-2 rounded relative overflow-hidden group">
+                                        <span class="absolute top-1 left-1 px-1 bg-black/60 text-sky-400 rounded text-[8px]">ORIGINAL STANDARD REFERENCE</span>
+                                        <div class="w-full h-24 bg-zinc-800 rounded mt-4 flex items-center justify-center text-gray-500 uppercase border border-sky-500/30">
+                                            [ ₹ Genuine Layer Map ]
+                                        </div>
+                                        <p class="mt-2 text-gray-400">Structural Target Guideline</p>
+                                    </div>
+                                    
+                                    <div class="bg-gray-950 border border-cyberBorder p-2 rounded relative overflow-hidden">
+                                        <span class="absolute top-1 left-1 px-1 bg-black/60 text-cyberWarning rounded text-[8px]">UPLOADED TARGET IMAGE SCAN</span>
+                                        <!-- Item 11: box marker highlighting an error shift zone -->
+                                        <div class="w-full h-24 bg-zinc-900 rounded mt-4 flex items-center justify-center text-gray-600 uppercase border border-red-500/60 relative">
+                                            [ ₹ Sample Load File ]
+                                            <div class="absolute inset-4 border-2 border-red-500 rounded animate-pulse" title="Micro-printing spatial shift alignment delta deviation anomaly flagged here."></div>
+                                        </div>
+                                        <p class="mt-2 text-cyberWarning">Anomaly Deviation Detected</p>
+                                    </div>
+
+                                    <div class="bg-gray-950 border border-cyberBorder p-2 rounded relative overflow-hidden">
+                                        <span class="absolute top-1 left-1 px-1 bg-black/60 text-purple-400 rounded text-[8px]">UV CHROMATIC SCALAR SHIFT</span>
+                                        <div class="w-full h-24 bg-purple-950/20 rounded mt-4 flex items-center justify-center text-purple-400 uppercase border border-purple-500/30">
+                                            [ Luminescence Check ]
+                                        </div>
+                                        <p class="mt-2 text-purple-400">Spectral Analysis Layer</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LOWER DUAL LAYOUT ROW: CHRONOLOGICAL TIMELINE FEED & CASE SUMMARY BOX METADATA -->
+            <div id="lowerForensicTelemetryRow" class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                
+                <!-- ITEM 18: AUTOMATED TEXT PROFILE CASE SUMMARY SELECTION BOX -->
+                <div class="xl:col-span-2 bg-cyberCard border border-cyberBorder rounded p-5 space-y-3">
+                    <div class="flex items-center justify-between border-b border-cyberBorder pb-2">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-white font-mono"><i class="fa-solid fa-file-invoice text-sky-400 mr-2"></i>Automated AI Case Summary Dossier</h3>
+                        <button onclick="copyCaseSummaryToClipboard()" class="text-[10px] font-mono bg-gray-900 border border-cyberBorder px-2.5 py-1 text-gray-300 hover:text-white rounded transition flex items-center gap-1.5"><i class="fa-solid fa-copy"></i> Copy Text</button>
+                    </div>
+                    <textarea id="txtCaseSummaryArea" readonly rows="3" class="w-full bg-gray-950 border border-cyberBorder rounded p-3 text-xs font-mono text-gray-300 leading-relaxed resize-none focus:outline-none">System operational ledger online. Trigger scanning analysis execution routines to populate dynamically generated legal telemetry summaries text blocks directly inside this field mapping.</textarea>
+                </div>
+
+                <!-- ITEM 12: SYSTEM FORENSIC AUDIT PIPELINE LOG CHRONOLOGICAL TIMELINE -->
+                <div class="bg-cyberCard border border-cyberBorder rounded p-5 space-y-3">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-white font-mono"><i class="fa-solid fa-clock-rotate-left text-sky-400 mr-2"></i>Operational Sequence Log</h3>
+                    <div id="forensicTimelineContainer" class="space-y-3 text-xs font-mono relative pl-4 border-l border-gray-800">
+                        <!-- Default empty state trace list -->
+                        <div class="relative"><span class="absolute -left-[21px] top-0.5 bg-gray-950 text-gray-600 rounded-full text-[9px] px-1 font-bold">●</span><div class="text-gray-500">10:31 Sequence Standby Mode</div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ITEM 6: NEW RECENT INVESTIGATION TABLE MATRIX DISPLAY LAYER -->
+            <div class="bg-cyberCard border border-cyberBorder rounded p-5">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-white mb-3 font-mono">Recent Forensic Investigation Node Log</h3>
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left text-xs font-mono">
+                        <thead>
+                            <tr class="border-b border-cyberBorder text-gray-500 text-[10px] uppercase font-bold">
+                                <th class="pb-2">Case ID</th>
+                                <th class="pb-2">Type</th>
+                                <th class="pb-2">Assigned Officer</th>
+                                <th class="pb-2">Status</th>
+                                <th class="pb-2 text-right">Time Log</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-800/50 text-gray-300 text-[11px]">
+                            {% for case in cases %}
+                            <tr class="hover:bg-gray-900/40 transition">
+                                <td class="py-2.5 font-sans font-semibold text-white">{{ case.case_id }}</td>
+                                <td class="py-2.5 text-sky-400">{{ case.case_type }}</td>
+                                <td class="py-2.5 font-sans text-gray-200">{{ case.officer }}</td>
+                                <td class="py-2.5">
+                                    <span class="px-2 py-0.5 rounded text-[9px] font-bold {% if case.status == 'Running' %}bg-sky-500/10 text-sky-400 border border-sky-500/20{% else %}bg-gray-800 text-gray-400 border border-gray-700{% endif %}">
+                                        {{ case.status }}
+                                    </span>
+                                </td>
+                                <td class="py-2.5 text-right font-sans text-gray-400">{{ case.time_elapsed }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ITEM 7: UNIFIED FORENSIC EXPORT ACTIONS CONTROLS BAR -->
+            <div class="pt-4 border-t border-cyberBorder flex flex-wrap justify-end items-center gap-2">
+                <button class="px-3 py-1.5 bg-gray-900 border border-cyberBorder hover:border-gray-700 rounded text-xs text-gray-300 transition flex items-center gap-1.5"><i class="fa-solid fa-file-shield text-sky-400"></i> Generate Case Report</button>
+                <button class="px-3 py-1.5 bg-gray-900 border border-cyberBorder hover:border-gray-700 rounded text-xs text-gray-300 transition flex items-center gap-1.5"><i class="fa-solid fa-file-pdf text-cyberDanger"></i> Download PDF Dossier</button>
+                <button class="px-3 py-1.5 bg-gray-900 border border-cyberBorder hover:border-gray-700 rounded text-xs text-gray-300 transition flex items-center gap-1.5"><i class="fa-solid fa-code text-amber-500"></i> Export JSON Data</button>
+                <button class="px-3 py-1.5 bg-gray-900 border border-cyberBorder hover:border-gray-700 rounded text-xs text-gray-300 transition flex items-center gap-1.5"><i class="fa-solid fa-file-zipper text-gray-400"></i> Evidence ZIP Package</button>
+                <button class="px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded text-xs font-medium transition flex items-center gap-1.5"><i class="fa-solid fa-paper-plane"></i> Forward Case Control</button>
+            </div>
+        </main>
+    </div>
+
+    <!-- MAIN FORENSIC CLIENT DATA MANAGEMENT SYSTEM SCRIPT ARCHITECTURE -->
+    <script>
+        let currentActiveTab = 'crypto';
+
+        // 🔄 ITEM 20: DYNAMIC INVESTIGATION DISPLAY MODE TOGGLE MANAGER
+        function setInvestigationMode(mode) {
+            const body = document.body;
+            const btnBasic = document.getElementById('btnModeBasic');
+            const btnAdvanced = document.getElementById('btnModeAdvanced');
+
+            if (mode === 'advanced') {
+                body.classList.add('advanced-mode');
+                btnAdvanced.className = "px-3 py-1 bg-sky-600 text-white rounded font-medium transition";
+                btnBasic.className = "px-3 py-1 text-gray-400 rounded font-medium transition";
+            } else {
+                body.classList.remove('advanced-mode');
+                btnBasic.className = "px-3 py-1 bg-sky-600 text-white rounded font-medium transition";
+                btnAdvanced.className = "px-3 py-1 text-gray-400 rounded font-medium transition";
+            }
+        }
+
+        // 🔄 MODULAR TAB ROUTING PLATFORM SWAP
+        function switchWorkspaceTab(tabId, btnElement) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.className = "tab-btn inline-block p-3 border-b-2 border-transparent hover:text-gray-300 transition";
+            });
+            
+            document.getElementById(tabId).classList.add('active');
+            btnElement.className = "tab-btn inline-block p-3 text-sky-400 border-b-2 border-sky-500 font-bold";
+            
+            currentActiveTab = (tabId === 'crypto-tab') ? 'crypto' : 'fiat';
+            resetToEmptyWorkflowState();
+        }
+
+        function resetToEmptyWorkflowState() {
+            // Reverts dynamic states back into standard baseline waiting profiles cleanly
+            document.getElementById('step-upload').className = 'text-gray-500';
+            document.getElementById('step-ocr').className = 'text-gray-500';
+            document.getElementById('step-ai').className = 'text-gray-500';
+            document.getElementById('step-review').className = 'text-cyberWarning animate-pulse';
+            document.getElementById('step-review').innerText = '🟡 Officer Review';
+            document.getElementById('step-closed').className = 'text-gray-600';
+            document.getElementById('step-closed').innerText = '⬜ Closed';
+        }
+
+        // 🌐 AJAX PIPELINE ROUTE 1: BLOCKCHAIN ADVANCED SCAN MATRIX
+        function executeBlockchainAnalysis() {
+            const nodeHash = document.getElementById('blockchainInputHash').value.strip ? document.getElementById('blockchainInputHash').value.strip() : document.getElementById('blockchainInputHash').value;
+            const chainNetwork = document.getElementById('blockchainNetworkSelect').value;
+
+            if(!nodeHash) {
+                document.getElementById('cryptoMainContent').classList.add('hidden');
+                document.getElementById('cryptoEmptyState').classList.remove('hidden');
+                return;
+            }
+
+            document.getElementById('cryptoMainContent').classList.remove('hidden');
+            document.getElementById('cryptoEmptyState').classList.add('hidden');
+
+            fetch('/currency/api/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ target_node: nodeHash, chain: chainNetwork })
+            })
+            .then(res => res.json())
+            .then(payload => {
+                if (payload.status === 'success') {
+                    const data = payload.data;
+                    
+                    // 1. Update Core Metadata Data Metrics
+                    document.getElementById('cryptoAmountVal').innerText = data.amount;
+                    document.getElementById('cryptoTimeVal').innerText = data.timestamp;
+                    document.getElementById('cryptoFeeVal').innerText = data.gas_fee;
+                    document.getElementById('cryptoSenderNode').innerText = data.sender;
+                    document.getElementById('cryptoBlockVal').innerText = '#' + data.block_height;
+
+                    // 2. Handle System Risk Labels Standard Formats
+                    const riskLabel = document.getElementById('cryptoRiskLabel');
+                    riskLabel.innerText = data.risk_level;
+                    if(data.risk_level === 'Critical') {
+                        riskLabel.className = "px-2 py-0.5 rounded bg-red-950 text-cyberDanger text-[10px] font-mono font-bold border border-red-900/50";
+                    } else {
+                        riskLabel.className = "px-2 py-0.5 rounded bg-emerald-950 text-cyberSuccess text-[10px] font-mono font-bold border border-emerald-900/50";
+                    }
+
+                    // 3. Update Threat Vector index metrics data
+                    document.getElementById('cryptoThreatPct').innerText = data.threat_percentage + '%';
+                    document.getElementById('cryptoThreatBar').style.width = data.threat_percentage + '%';
+
+                    // 4. Update Engine Badges Components
+                    const enginesBox = document.getElementById('cryptoEngineBadges');
+                    enginesBox.innerHTML = '';
+                    data.detection_engines.forEach(eng => {
+                        enginesBox.innerHTML += `<span class="px-2 py-0.5 rounded bg-gray-900 text-gray-300 border border-gray-800">${eng}</span>`;
+                    });
+
+                    // 5. Build Structured AI Flags Explanations
+                    const flagsBox = document.getElementById('cryptoAiFlagsContainer');
+                    flagsBox.innerHTML = '';
+                    data.ai_flags.forEach(flag => {
+                        flagsBox.innerHTML += `<li class="flex items-start gap-2 text-cyberDanger"><i class="fa-solid fa-circle-xmark mt-0.5"></i> ${flag}</li>`;
+                    });
+
+                    // 6. Map Actions Recommendations lists
+                    const recsBox = document.getElementById('cryptoRecommendations');
+                    recsBox.innerHTML = '';
+                    data.recommendations.forEach(rec => {
+                        recsBox.innerHTML += `<div class="bg-gray-950 p-2 rounded border border-gray-900 flex items-center gap-2 text-cyberSuccess"><i class="fa-solid fa-square-check"></i> ${rec}</div>`;
+                    });
+
+                    // 7. Configure Metrics Confidence Index Mappings
+                    document.getElementById('cryptoConfOcr').innerText = data.confidence_matrix.ocr + '%';
+                    document.getElementById('cryptoConfVision').innerText = data.confidence_matrix.vision + '%';
+                    document.getElementById('cryptoConfGraph').innerText = data.confidence_matrix.graph + '%';
+                    document.getElementById('cryptoConfOverall').innerText = data.confidence_matrix.overall + '%';
+
+                    // 8. Text Summary Data Box Mappings
+                    document.getElementById('txtCaseSummaryArea').value = data.case_summary;
+
+                    // 9. Rebuild Timeline Logging Trace Viewports
+                    rebuildTimelineLogs(data.timeline);
+                    updateWorkflowPipelineProgress(data.risk_level);
+                }
+            })
+            .catch(err => console.error("Crypto network subsystem drop log trace fault:", err));
+        }
+
+        // 💵 AJAX PIPELINE ROUTE 2: PHYSICAL FIAT BANKNOTE SCANS AUTHENTICATOR
+        function simulateNoteScanUpload() {
+            document.getElementById('noteSerialInput').value = "5FG-" + Math.floor(100000 + Math.random() * 900000);
+            executeBanknoteVerification();
+        }
+
+        function executeBanknoteVerification() {
+            const serialNum = document.getElementById('noteSerialInput').value;
+            const denomVal = document.getElementById('noteDenominationSelect').value;
+
+            if(!serialNum) {
+                document.getElementById('fiatMainContent').classList.add('hidden');
+                document.getElementById('fiatEmptyState').classList.remove('hidden');
+                return;
+            }
+
+            document.getElementById('fiatMainContent').classList.remove('hidden');
+            document.getElementById('fiatEmptyState').classList.add('hidden');
+
+            fetch('/currency/api/verify-note', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ serial_number: serialNum, denomination: denomVal })
+            })
+            .then(res => res.json())
+            .then(payload => {
+                if (payload.status === 'success') {
+                    const data = payload.data;
+
+                    // 1. Update Core Checklists Values Fields
+                    document.getElementById('noteResDenom').innerText = data.denomination;
+                    document.getElementById('noteResYear').innerText = data.year;
+                    document.getElementById('noteResSeries').innerText = data.series;
+                    document.getElementById('noteResThreatScore').innerText = data.threat_percentage + '%';
+
+                    // 2. Map Feature Checks Safeguards Without Returning Any Undefined Errors
+                    setFeatureCheckElement('featureWatermark', data.features.watermark);
+                    setFeatureCheckElement('featureSecurityThread', data.features.security_thread);
+                    setFeatureCheckElement('featureIntaglio', data.features.intaglio_ink);
+                    setFeatureCheckElement('featureMicrotext', data.features.microtext);
+
+                    // 3. Render Badges Status Color Scales Labels
+                    const riskLabel = document.getElementById('noteRiskLabel');
+                    const verdictBadge = document.getElementById('noteVerdictBadge');
+                    riskLabel.innerText = data.risk_level;
+                    verdictBadge.innerText = data.verdict;
+
+                    if (data.risk_level === 'Critical') {
+                        riskLabel.className = "text-cyberDanger font-bold";
+                        verdictBadge.className = "px-2.5 py-1 rounded bg-red-950 text-cyberDanger text-xs font-bold border border-red-900/60 tracking-wider";
+                    } else {
+                        riskLabel.className = "text-cyberSuccess font-bold";
+                        verdictBadge.className = "px-2.5 py-1 rounded bg-emerald-950 text-cyberSuccess text-xs font-bold border border-emerald-900/60 tracking-wider";
+                    }
+
+                    // 4. Update Text Box Descriptions summary logs properties
+                    document.getElementById('txtCaseSummaryArea').value = data.case_summary;
+
+                    // 5. Append Chronology Timeline Data Matrices
+                    rebuildTimelineLogs(data.timeline);
+                    updateWorkflowPipelineProgress(data.risk_level);
+                }
+            })
+            .catch(err => console.error("Banknote communication network layer terminal fault:", err));
+        }
+
+        // UTILITY INTERFACE COMPONENT PARSING ENGINES
+        function setFeatureCheckElement(elementId, textValue) {
+            const targetEl = document.getElementById(elementId);
+            // Handle fallbacks safely
+            const safeText = textValue ? textValue : "Unavailable";
+            targetEl.innerText = safeText;
+
+            if (safeText === 'Verified') {
+                targetEl.className = "font-mono text-[11px] font-bold text-cyberSuccess";
+            } else if (safeText.includes('Missing') || safeText.includes('Anomalous')) {
+                targetEl.className = "font-mono text-[11px] font-bold text-cyberDanger";
+            } else {
+                targetEl.className = "font-mono text-[11px] font-bold text-cyberWarning";
+            }
+        }
+
+        function rebuildTimelineLogs(timelineArray) {
+            const container = document.getElementById('forensicTimelineContainer');
+            container.innerHTML = '';
+            if(!timelineArray) return;
+
+            timelineArray.forEach(item => {
+                container.innerHTML += `
+                    <div class="relative">
+                        <span class="absolute -left-[21px] top-0.5 bg-gray-950 text-sky-400 rounded-full text-[9px] px-1 font-bold">●</span>
+                        <div class="text-gray-200 font-bold">${item.time} - ${item.event}</div>
+                        <div class="text-gray-500 text-[11px] font-sans mt-0.5">${item.desc}</div>
+                    </div>
+                `;
+            });
+        }
+
+        function updateWorkflowPipelineProgress(riskLevel) {
+            const up = document.getElementById('step-upload');
+            const ocr = document.getElementById('step-ocr');
+            const ai = document.getElementById('step-ai');
+            const rev = document.getElementById('step-review');
+            const cls = document.getElementById('step-closed');
+
+            up.className = "text-cyberSuccess";
+            ocr.className = "text-cyberSuccess";
+            ai.className = "text-cyberSuccess";
+
+            if (riskLevel === 'Low') {
+                rev.className = "text-cyberSuccess";
+                rev.innerText = "✓ Review Complete";
+                cls.className = "text-cyberSuccess font-bold";
+                cls.innerText = "✓ Case Closed";
+            } else {
+                rev.className = "text-cyberWarning animate-pulse font-bold";
+                rev.innerText = "🟡 Officer Review";
+                cls.className = "text-gray-600";
+                cls.innerText = "⬜ Case Closed";
+            }
+        }
+
+        function copyCaseSummaryToClipboard() {
+            const copyText = document.getElementById("txtCaseSummaryArea");
+            copyText.select();
+            copyText.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(copyText.value);
+        }
+
+        // Initialize display triggers on first document instantiation load sequences
+        window.addEventListener('DOMContentLoaded', () => {
+            executeBlockchainAnalysis();
+        });
+    </script>
+</body>
+</html>

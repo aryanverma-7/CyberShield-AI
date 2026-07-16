@@ -1,0 +1,870 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_head %}
+<style>
+    .soc-header-tag {
+        font-family: monospace;
+        letter-spacing: 1px;
+        text-shadow: 0 0 6px rgba(59, 130, 246, 0.6);
+    }
+    .metric-value {
+        font-size: 1.7rem;
+        font-weight: 800;
+        font-family: monospace;
+    }
+    .metric-title {
+        font-size: 0.65rem;
+        color: #8a99ad;
+        letter-spacing: 0.5px;
+        font-family: monospace;
+    }
+    .timeline-stepper {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px;
+        background: rgba(10, 15, 26, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 6px;
+    }
+    .step-node {
+        font-size: 0.62rem;
+        padding: 4px 8px;
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        color: #64748b;
+        font-family: monospace;
+        transition: all 0.25s ease;
+    }
+    .step-node.active {
+        background: rgba(59, 130, 246, 0.15);
+        border-color: #3b82f6;
+        color: #3b82f6;
+        text-shadow: 0 0 4px rgba(59, 130, 246, 0.5);
+    }
+    .step-node.completed {
+        background: rgba(34, 197, 94, 0.12);
+        border-color: #22c55e;
+        color: #22c55e;
+    }
+    .scan-annotation-frame {
+        position: relative;
+        width: 100%;
+        background: #050811;
+        border-radius: 6px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .scanner-target-box {
+        position: absolute;
+        border: 1.5px dashed #ef4444;
+        background: rgba(239, 68, 68, 0.08);
+        color: #ef4444;
+        font-family: monospace;
+        font-size: 9px;
+        padding: 2px;
+        pointer-events: none;
+        transition: all 0.3s ease;
+    }
+    .scanner-target-box.success {
+        border-color: #22c55e;
+        background: rgba(34, 197, 94, 0.08);
+        color: #22c55e;
+    }
+    .scanner-target-box.info {
+        border-color: #3b82f6;
+        background: rgba(59, 130, 246, 0.08);
+        color: #3b82f6;
+    }
+    .terminal-log-feed {
+        font-family: monospace;
+        font-size: 0.7rem;
+        background: rgba(5, 8, 17, 0.85);
+        border-radius: 6px;
+        padding: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        height: 180px;
+        overflow-y: auto;
+    }
+    .terminal-log-row {
+        padding: 3px 6px;
+        border-left: 2px solid #64748b;
+        margin-bottom: 4px;
+        background: rgba(255,255,255,0.01);
+    }
+    
+    /* New Additions Architecture Styles */
+    .animation-terminal-overlay {
+        font-family: monospace;
+        background: #060913;
+        color: #38bdf8;
+        padding: 15px;
+        border-radius: 6px;
+        border: 1px solid rgba(56, 189, 248, 0.2);
+        font-size: 0.75rem;
+    }
+    .custody-tag {
+        font-family: monospace;
+        font-size: 0.7rem;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .risk-badge {
+        font-family: monospace;
+        font-weight: 900;
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+    }
+    .risk-bg-GREEN { background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid #22c55e; }
+    .risk-bg-YELLOW { background: rgba(234, 179, 8, 0.15); color: #eab308; border: 1px solid #eab308; }
+    .risk-bg-ORANGE { background: rgba(249, 115, 22, 0.15); color: #f97316; border: 1px solid #f97316; }
+    .risk-bg-RED { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid #ef4444; }
+</style>
+{% endblock %}
+
+{% block page_title %}AI Evidence Fusion Command Center{% block case_status_area %}<span class="badge bg-primary-subtle text-primary border ms-3 font-monospace" id="caseTopStatus">● Under Analysis</span>{% endblock %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0" data-aos="fade-up">
+
+    <!-- TOP LEVEL METRICS -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-2-5 col-6">
+            <div class="glass-card p-3 text-center">
+                <div class="metric-value text-white" id="statToday">128</div>
+                <div class="metric-title">Today's Ingested Complaints</div>
+            </div>
+        </div>
+        <div class="col-md-2-5 col-6">
+            <div class="glass-card p-3 text-center">
+                <div class="metric-value text-info">96.2%</div>
+                <div class="metric-title">System Accuracy Matrix</div>
+            </div>
+        </div>
+        <div class="col-md-2-5 col-6">
+            <div class="glass-card p-3 text-center">
+                <div class="metric-value text-warning">18 sec</div>
+                <div class="metric-title">Mean Analytical Delay</div>
+            </div>
+        </div>
+        <div class="col-md-2-5 col-6">
+            <div class="glass-card p-3 text-center">
+                <div class="metric-value text-danger" id="statHighRisk">31</div>
+                <div class="metric-title">Uncontained High-Risk Cases</div>
+            </div>
+        </div>
+        <div class="col-md-2-5 col-12">
+            <div class="glass-card p-3 text-center">
+                <div class="metric-value text-success">4.2 GB</div>
+                <div class="metric-title">Evidence Packets Processed</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PIPELINE INVESTIGATION STEPPER -->
+    <div class="mb-4">
+        <div class="timeline-stepper" id="timelineStepper">
+            <span class="step-node active" id="step-complaint">Complaint Filed</span>
+            <span class="step-node" id="step-ocr">OCR Mapping</span>
+            <span class="step-node" id="step-speech">Speech Acoustics</span>
+            <span class="step-node" id="step-metadata">Entity Core</span>
+            <span class="step-node" id="step-threat">Threat Analysis</span>
+            <span class="step-node" id="step-correlation">Case Overlap</span>
+            <span class="step-node" id="step-recommendation">Action Plan</span>
+            <span class="step-node" id="step-report">Summary Report</span>
+            <span class="step-node" id="step-fir">FIR Compilation</span>
+            <span class="step-node" id="step-archive">Archived Vault</span>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- LEFT PANEL: Entry Ingestion System & Chain of Custody -->
+        <div class="col-xl-5">
+            <div class="glass-card p-4 h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <div class="border-bottom border-secondary pb-2 mb-3">
+                        <h6 class="text-white fw-bold mb-0 font-monospace text-uppercase"><i class="fa-solid fa-folder-open text-primary me-2"></i>Investigation Entry Point</h6>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-white-50 small font-monospace">Forensic Reference Identifier</label>
+                        <input type="text" class="form-control bg-dark bg-opacity-50 border-secondary text-white font-monospace fw-bold" value="{{ case_id }}" id="caseIdInput" readonly>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-white-50 small font-monospace">Crime Class Architecture Selection (15 Operational Matrices)</label>
+                        <select class="form-select bg-dark border-secondary text-white font-monospace text-info" id="crimeCategory" onchange="switchCrimeTemplate()">
+                            <option value="Digital Arrest Scam" selected>Digital Arrest Scam</option>
+                            <option value="UPI Payment Fraud">UPI Payment Fraud</option>
+                            <option value="Fake Banking KYC Scam">Fake Banking KYC Scam</option>
+                            <option value="Fake Loan App Extortion">Fake Loan App Extortion</option>
+                            <option value="Phishing Website / Domain Spoofing">Phishing Website / Domain Spoofing</option>
+                            <option value="QR Code Payment Redirection">QR Code Payment Redirection</option>
+                            <option value="Investment / Trading Scam">Investment / Trading Scam</option>
+                            <option value="Cryptocurrency Fraud">Cryptocurrency Fraud</option>
+                            <option value="Fake Customer Care Scam">Fake Customer Care Scam</option>
+                            <option value="Fake Job Recruitment Scam">Fake Job Recruitment Scam</option>
+                            <option value="Fake Internship / Certificate Scam">Fake Internship / Certificate Scam</option>
+                            <option value="SIM Swap / OTP Fraud">SIM Swap / OTP Fraud</option>
+                            <option value="Social Media Account Takeover">Social Media Account Takeover</option>
+                            <option value="E-commerce Marketplace Fraud">E-commerce Marketplace Fraud</option>
+                            <option value="Counterfeit Currency Investigation">Counterfeit Currency Investigation</option>
+                        </select>
+                    </div>
+
+                    <!-- Dynamic Ingestion Slots -->
+                    <div class="mb-3">
+                        <label class="form-label text-white-50 small font-monospace">Target Evidence Evidence files</label>
+                        <div class="d-flex flex-column gap-2 mb-2">
+                            <div class="p-2 border border-dashed border-secondary rounded" style="background: rgba(255,255,255,0.01);">
+                                <span class="text-white small fw-bold d-block mb-1" id="lblSlot1">Screenshot File</span>
+                                <input type="file" id="fileSlot1" class="form-control form-control-sm bg-dark text-white font-monospace" onchange="runImageAnnotationCanvas(this)">
+                            </div>
+
+                            <div id="canvasAnnotationFrame" class="scan-annotation-frame d-none mb-2" style="height: 180px;">
+                                <img id="annotationRawImage" src="#" alt="Raw Ingested Frame" class="w-100 h-100 object-fit-contain">
+                                <div id="scanLineBar" style="position: absolute; top:0; left:0; width:100%; height:2px; background: #3b82f6; box-shadow: 0 0 10px #3b82f6; animation: scanning_loop 3s linear infinite;"></div>
+                                <div id="annotBoxA" class="scanner-target-box">Analyzing...</div>
+                                <div id="annotBoxB" class="scanner-target-box success">Analyzing...</div>
+                                <div id="annotBoxC" class="scanner-target-box info">Analyzing...</div>
+                            </div>
+
+                            <div class="p-2 border border-dashed border-secondary rounded" id="divSlot2Container" style="background: rgba(255,255,255,0.01);">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="text-white small fw-bold" id="lblSlot2">Supplementary Recording</span>
+                                    <span class="badge bg-warning-subtle text-warning font-monospace" style="font-size: 9px;">Optional Data Stream</span>
+                                </div>
+                                <input type="file" id="fileSlot2" class="form-control form-control-sm bg-dark text-white font-monospace">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-white-50 small font-monospace">Raw Citizen Transcript Log / Statement Input</label>
+                        <textarea class="form-control bg-dark border-secondary text-white font-monospace small" rows="3" id="statementTextarea"></textarea>
+                    </div>
+                </div>
+
+                <!-- ADDITION 2: FORENSIC CHAIN OF CUSTODY LEDGER CARD -->
+                <div class="custody-tag p-3 rounded mb-3">
+                    <div class="text-white fw-bold mb-2 border-bottom border-secondary border-opacity-30 pb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">
+                        <i class="fa-solid fa-lock text-success me-1"></i> FORENSIC CHAIN OF CUSTODY
+                    </div>
+                    <div class="row g-2 text-white-50" style="font-size: 0.65rem;">
+                        <div class="col-6">Evidence Hash: <strong class="text-white" id="custodyHash">SHA256 Pending</strong> <span class="text-success">✓</span></div>
+                        <div class="col-6 text-end">Uploaded By: <strong class="text-white">Inspector A. Singh</strong></div>
+                        <div class="col-6">Timestamp: <strong class="text-white" id="custodyTime">15 July 2026 --:--</strong></div>
+                        <div class="col-6 text-end">Stream Integrity: <strong class="text-success" id="custodyIntegrity">100% Secure</strong></div>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary btn-lg w-100 py-3 fw-bold font-monospace" onclick="runEvidenceFusionEngine()" id="btnActionExecute">
+                    <i class="fa-solid fa-server me-2"></i>PROCESS EVIDENCE INTEGRITY
+                </button>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL: Asynchronous Loop, SIEM Logs, Complex Matrix Sliders -->
+        <div class="col-xl-7">
+            <div id="idleScreen" class="glass-card p-5 text-center h-100 d-flex flex-column justify-content-center align-items-center">
+                <i class="fa-solid fa-shield-halved text-muted mb-4" style="font-size: 3.5rem;"></i>
+                <h5 class="text-white">Standby: Diagnostic Core Idle</h5>
+                <p class="text-muted small max-width-350 font-monospace">Load target evidence material, verify coordinates, and initialize automated diagnostic sequences to extract indicators.</p>
+            </div>
+
+            <!-- ADDITION 4: LIVE PROCESSING SEQUENCE MACHINE -->
+            <div id="processingScreen" class="glass-card p-4 h-100 d-none d-flex flex-column justify-content-center">
+                <div class="animation-terminal-overlay">
+                    <div class="mb-2 text-white border-bottom border-secondary pb-1">⚡ FORENSIC RUNTIME ENGINE SEQUENCE ACTIVE</div>
+                    <div id="loadingStatusText" class="fw-bold text-info mb-2">Initializing processing modules...</div>
+                    <div class="progress mb-3" style="height: 12px; background: rgba(255,255,255,0.05);">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-info" id="processingAnimBar" style="width: 10%"></div>
+                    </div>
+                    <div id="processingVisualProgress" class="text-white-50 font-monospace" style="font-size: 0.7rem; line-height: 1.6;">
+                        <!-- Step logs loop text -->
+                    </div>
+                </div>
+            </div>
+
+            <div id="activeDiagnosticPanel" class="glass-card p-4 h-100 d-none">
+                <div class="border-bottom border-secondary pb-2 mb-3 d-flex justify-content-between align-items-center">
+                    <h6 class="text-white fw-bold mb-0 font-monospace text-uppercase"><i class="fa-solid fa-network-wired text-success me-2"></i>Diagnostics Core Telemetry</h6>
+                    <span class="badge bg-success-subtle text-success border font-monospace" id="socCoreBadge" style="font-size: 10px;">STANDBY READY</span>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="h-100 d-flex flex-column">
+                            <span class="small text-white-50 font-monospace mb-1"><i class="fa-solid fa-terminal me-1"></i> Forensic SIEM Log Feed</span>
+                            <div class="terminal-log-feed" id="terminalLogFeed"></div>
+                        </div>
+                    </div>
+
+                    <!-- ADDITION 3 & 7: ADVANCED CONFIDENCE & DEVICE INTEGRITY BREAKDOWN -->
+                    <div class="col-md-6 font-monospace small">
+                        <span class="small text-white-50 d-block mb-2"><i class="fa-solid fa-chart-bar me-1"></i> Multi-Agent Accuracy Breakdown</span>
+                        <div class="p-3 bg-dark bg-opacity-30 border border-secondary rounded text-white-50" style="font-size: 0.7rem;">
+                            <div class="d-flex justify-content-between mb-1"><span>OCR Character Engine</span><strong class="text-white" id="lblConfOCR">96%</strong></div>
+                            <div class="d-flex justify-content-between mb-1"><span>Speech Wave Acoustics</span><strong class="text-white" id="lblConfSpeech">91%</strong></div>
+                            <div class="d-flex justify-content-between mb-1"><span>Metadata Ingress Core</span><strong class="text-white" id="lblConfMeta">94%</strong></div>
+                            <div class="d-flex justify-content-between mb-1"><span>Entity Catalog Extraction</span><strong class="text-white" id="lblConfEntity">98%</strong></div>
+                            <div class="d-flex justify-content-between mb-1"><span>Gemini Reasoner Deck</span><strong class="text-white" id="lblConfReason">95%</strong></div>
+                            <hr class="my-1 border-secondary">
+                            <div class="d-flex justify-content-between text-info fw-bold"><span>Calculated Composite Axis</span><span id="lblConfOverall">96%</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Forensic Evidence Summarization Panel -->
+                <div class="mb-3">
+                    <span class="small text-white-50 font-monospace d-block mb-1"><i class="fa-solid fa-receipt me-1"></i> Verified Ingested Evidence Summary</span>
+                    <div class="row g-2" id="evidenceSummaryGrid"></div>
+                </div>
+
+                <!-- Structured Dynamic Ingested Entities Panel -->
+                <div>
+                    <span class="small text-white-50 font-monospace d-block mb-1"><i class="fa-solid fa-tags me-1"></i> Extracted Forensic Entity Catalog</span>
+                    <div class="row g-2 text-white small" id="entitiesGrid"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DEEP ANALYSIS WORKSPACE -->
+    <div class="row g-4 mt-2 d-none" id="deepAnalysisPanel">
+
+        <div class="col-xl-5">
+            <div class="glass-card p-4 h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <div class="border-bottom border-secondary pb-2 mb-3 d-flex justify-content-between align-items-center">
+                        <h6 class="text-white fw-bold mb-0 font-monospace text-uppercase"><i class="fa-solid fa-brain text-success me-2"></i>Cognitive Analysis Matrix</h6>
+                        <!-- ADDITION 8: RISK METER VALUE BADGE -->
+                        <div>Risk Index: <span class="risk-badge" id="riskMeterBadge">RED</span></div>
+                    </div>
+
+                    <!-- Clinical Executive Summary -->
+                    <div class="mb-3 p-3 bg-dark bg-opacity-35 rounded border border-secondary">
+                        <span class="small text-success font-monospace d-block mb-1"><i class="fa-solid fa-file-invoice-dollar me-1"></i> AI Executive Verdict</span>
+                        <p class="small text-white-50 mb-0 font-monospace" style="line-height: 1.4; font-size: 0.72rem;" id="execSummaryText"></p>
+                    </div>
+
+                    <!-- Voice Stress Analyzer & Trigger Keywords -->
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <div class="p-2 bg-dark bg-opacity-35 rounded border border-secondary">
+                                <span class="small text-white-50 font-monospace d-block mb-1">Voice Emotion Biometrics</span>
+                                <div class="small font-monospace" id="voiceBiometricsWrapper" style="font-size: 0.65rem;"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-2 bg-dark bg-opacity-35 rounded border border-secondary">
+                                <span class="small text-white-50 font-monospace d-block mb-1">Scam Keyword Matches</span>
+                                <div id="scamKeywordsWrapper" class="d-flex flex-wrap gap-1"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ADDITION 5: DYNAMIC HIGH PRIORITY AI RECOMMENDATION BOX -->
+                    <div class="mb-3 p-3 bg-danger bg-opacity-10 rounded border border-danger border-opacity-30">
+                        <span class="small text-danger font-monospace fw-bold d-block mb-2"><i class="fa-solid fa-triangle-exclamation me-1"></i> AI CONTAINMENT RECOMMENDATION BOX</span>
+                        <div class="d-flex flex-column gap-1 font-monospace text-white small" style="font-size: 0.7rem;" id="aiBoxRecommendations">
+                            <!-- Injected dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Threat Score Elements -->
+                    <div class="mb-3">
+                        <div class="p-3 bg-dark bg-opacity-35 rounded border border-secondary text-center">
+                            <span class="small text-white-50 font-monospace d-block mb-1">AI Threat Score Construction</span>
+                            <div class="d-flex justify-content-center align-items-center gap-3">
+                                <div class="text-danger fw-bold font-monospace display-6" id="additiveThreatScore">0</div>
+                                <div class="text-start small text-white-50 font-monospace" id="threatAdditiveFormula" style="font-size: 0.62rem;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Attack Vectors Matrix -->
+                    <div class="mb-3 font-monospace small">
+                        <span class="small text-white-50 d-block mb-1">Attack Core Vectors Impact</span>
+                        <div class="p-3 bg-dark bg-opacity-35 rounded border border-secondary row g-2">
+                            <div class="col-6">Financial: <span class="fw-bold text-danger" id="sevFinancial">0%</span></div>
+                            <div class="col-6">Identity: <span class="fw-bold text-warning" id="sevIdentity">0%</span></div>
+                            <div class="col-6">Psychological: <span class="fw-bold text-info" id="sevPsychological">0%</span></div>
+                            <div class="col-6">Organized Crime: <span class="fw-bold text-danger" id="sevCrime">0%</span></div>
+                            <div class="col-12 border-top border-secondary border-opacity-30 pt-1 mt-1">Public Safety Vector: <span class="fw-bold text-success" id="sevPublic">0%</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Playbook Items -->
+                <div>
+                    <span class="small text-white-50 font-monospace d-block mb-1">Critical Action Containment Playbook</span>
+                    <ul class="list-unstyled mb-0 font-monospace small" id="containmentPlaybookTarget"></ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-7">
+            <div class="glass-card p-4 h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <div class="border-bottom border-secondary pb-2 mb-3">
+                        <h6 class="text-white fw-bold mb-0 font-monospace text-uppercase"><i class="fa-solid fa-map-location-dot text-info me-2"></i>Incident Intelligence Ledger</h6>
+                    </div>
+
+                    <!-- Geo Intelligence -->
+                    <div class="row g-2 mb-3 font-monospace">
+                        <div class="col-md-6">
+                            <div class="p-3 bg-dark bg-opacity-35 rounded border border-secondary h-100">
+                                <div class="small text-white-50 mb-1">Geographical Density</div>
+                                <h6 class="text-white fw-bold mb-0" id="geoTargetName">Lucknow, UP</h6>
+                                <div class="small text-info mt-1" id="geoClusterInfo">Radius: 3.8 km | Cluster: Critical</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 bg-dark bg-opacity-35 rounded border border-secondary h-100 text-center">
+                                <div class="small text-white-50 mb-1">Temporal Ingress Matches</div>
+                                <div class="d-flex justify-content-between px-2">
+                                    <span>Peak Hour: <strong id="geoPeakTime">8:00 PM</strong></span>
+                                    <span>Trend: <strong class="text-danger" id="geoTrend">+18%</strong></span>
+                                </div>
+                                <div class="d-flex justify-content-between px-2 mt-1 small text-muted">
+                                    <span>Today: <strong class="text-white" id="geoCountToday">54</strong></span>
+                                    <span>Prev Week: <strong class="text-white" id="geoCountWeek">211</strong></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ADDITION 6: CHRONOLOGICAL THREAT TIMELINE INTERFACE -->
+                    <div class="mb-3">
+                        <span class="small text-white-50 font-monospace d-block mb-1"><i class="fa-solid fa-clock-rotate-left me-1"></i> Chronological Incident Threat Timeline</span>
+                        <div class="p-3 bg-dark bg-opacity-35 rounded border border-secondary font-monospace text-white small" style="font-size: 0.68rem;">
+                            <div class="d-flex flex-column gap-2" id="threatTimelineWrapper">
+                                <!-- Steps appended via javascript -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ADDITION 9: RELATED THREAT NETWORK DISTRIBUTION GRAPH -->
+                    <div class="mb-3">
+                        <span class="small text-white-50 font-monospace d-block mb-1"><i class="fa-solid fa-diagram-project me-1"></i> Related Threat Infrastructure Distribution Node Graph</span>
+                        <div class="p-3 bg-dark bg-opacity-35 rounded border border-secondary text-center font-monospace text-info fw-bold" style="font-size: 0.68rem; letter-spacing: 0.5px;">
+                            <span class="p-1 rounded bg-secondary-subtle text-white">Victim Target Node</span> ➔ 
+                            <span class="p-1 rounded bg-danger-subtle text-danger">Suspect Phone Routing</span> ➔ 
+                            <span class="p-1 rounded bg-warning-subtle text-warning" id="flowMuleNode">Suspect UPI</span> ➔ 
+                            <span class="p-1 rounded bg-info-subtle text-info">Settlement Bank Ledger</span> ➔ 
+                            <span class="p-1 rounded bg-dark border text-white">Cross Crypto Asset</span> ➔ 
+                            <span class="p-1 rounded bg-success-subtle text-success">Offshore Exchange</span>
+                        </div>
+                    </div>
+
+                    <!-- Related Case Matches -->
+                    <div class="mb-3">
+                        <span class="small text-white-50 font-monospace d-block mb-1"><i class="fa-solid fa-circle-nodes me-1"></i> Related Case Cross-Correlation Links</span>
+                        <div class="p-2 bg-dark bg-opacity-35 rounded border border-secondary font-monospace" id="similarCasesTarget" style="font-size: 0.68rem;"></div>
+                    </div>
+
+                    <!-- ADDITION 10: FINAL INVESTIGATION SCORECARD SUMMARY -->
+                    <div class="mb-3 p-3 bg-dark border border-info border-opacity-30 rounded">
+                        <div class="text-info fw-bold mb-2 font-monospace" style="font-size: 0.75rem;"><i class="fa-solid fa-square-poll-horizontal me-1"></i> PRE-EXPORT INVESTIGATION SUMMARY OBJECT</div>
+                        <div class="row g-2 font-monospace text-white-50" style="font-size: 0.68rem;">
+                            <div class="col-4">Complainant ID: <strong class="text-white">Aryan Verma</strong></div>
+                            <div class="col-4">Threat Vectors Mapped: <strong class="text-white" id="summaryThreatType">Digital Arrest</strong></div>
+                            <div class="col-4 text-end">Composite Confidence: <strong class="text-info" id="summaryConf">97%</strong></div>
+                            <div class="col-4">Evidence Nodes Ingested: <strong class="text-white">5 Streams</strong></div>
+                            <div class="col-4">Cross Correlated Network: <strong class="text-white">14 Related Files</strong></div>
+                            <div class="col-4 text-end">Flag Actions Checked: <strong class="text-success">Freeze & Transmit</strong></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECURE BUNDLE EXPORT ACTIONS -->
+                <div>
+                    <div class="border-top border-secondary pt-3 mt-3">
+                        <span class="d-block text-white-50 small font-monospace mb-2"><i class="fa-solid fa-cloud-arrow-down text-success me-1"></i> Secure Evidence Bundle Export Suite</span>
+                        <div class="row g-2">
+                            <div class="col-md-3 col-6"><a id="dlCaseReport" href="#" target="_blank" class="btn btn-outline-primary btn-sm w-100 font-monospace py-2"><i class="fa-solid fa-file-pdf me-1"></i> Case Report</a></div>
+                            <div class="col-md-3 col-6"><a id="dlOcr" href="#" target="_blank" class="btn btn-outline-info btn-sm w-100 font-monospace py-2"><i class="fa-solid fa-file-lines me-1"></i> Parsed OCR</a></div>
+                            <div class="col-md-3 col-6"><a id="dlSpeech" href="#" target="_blank" class="btn btn-outline-warning btn-sm w-100 font-monospace py-2"><i class="fa-solid fa-waveform me-1"></i> Transcripts</a></div>
+                            <div class="col-md-3 col-12"><a id="dlFir" href="#" target="_blank" class="btn btn-outline-danger btn-sm w-100 font-monospace py-2"><i class="fa-solid fa-gavel me-1"></i> Compiled FIR</a></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// ADDITION 11: EXPANDED 15 CRIME SCENARIO PRESETS MATRIX DICTIONARY
+const CRIME_PRESETS = {
+    "Digital Arrest Scam": {
+        lblSlot1: "📷 Caller ID Profile / Fake Legal Notice Screen",
+        lblSlot2: "🎤 Extorted Voice Call Recording (WAV/MP3)",
+        statement: "Complainant contacted by individuals on +91 95482-10492 claiming to represent CBI legal offices. They claimed credentials matched laundering profiles and issued a fake digital arrest threats, forcing immediate escrow transfers of ₹1,50,000 to VPA address mule.pay88@ybl.",
+        annot: { boxA: { top: "15%", left: "12%", width: "22%", height: "20%", text: "Fake Gov Stamp" }, boxB: { top: "45%", left: "50%", width: "45%", height: "18%", text: "Threatening Term" }, boxC: { top: "70%", left: "15%", width: "55%", height: "15%", text: "Caller ID Match" } }
+    },
+    "UPI Payment Fraud": {
+        lblSlot1: "📷 Target QR Code / Transaction Failure Image",
+        lblSlot2: "📷 Verification SMS Inbound Thread",
+        statement: "Received transaction modification request routing an incoming debit alert value of ₹35,000 via malicious link intercept routing to payment point endpoint handle payment.transfer@oksbi.",
+        annot: { boxA: { top: "20%", left: "20%", width: "50%", height: "40%", text: "UPI Address Line" } }
+    },
+    "Fake Banking KYC Scam": {
+        lblSlot1: "📷 High-urgency SMS Warning Screenshot",
+        lblSlot2: "📷 Fake netbanking form interface image",
+        statement: "Urgent text transmission notification warning that netbanking logs will expire unless account database update is processed instantly on mock portal secure-axis-update.net.",
+        annot: { boxA: { top: "10%", left: "5%", width: "80%", height: "30%", text: "Urgent SMS Core" } }
+    },
+    "Fake Loan App Extortion": {
+        lblSlot1: "📷 Malicious Loan App Application APK Screenshot",
+        lblSlot2: "📷 Extortion message thread packet logs",
+        statement: "Downloaded FastCash application variant. Suspect entities extracted contacts list data profiles and launched blackmail threatening coordination updates to contacts database unless ₹80,000 sent.",
+        annot: { boxA: { top: "40%", left: "10%", width: "70%", height: "40%", text: "Blackmail Pattern" } }
+    },
+    "Phishing Website / Domain Spoofing": {
+        lblSlot1: "📷 Spoofed Interface UI Portal Screenshot",
+        lblSlot2: "📄 Domain DNS Registry Packet log sheet (PDF)",
+        statement: "Observed replica system login page serving active redirection assets from secure-bns-verify.com. DNS tracing reflects newly registered structure containing no valid SSL certification vectors.",
+        annot: { boxA: { top: "5%", left: "10%", width: "80%", height: "15%", text: "Spoofed Domain URL" } }
+    },
+    "QR Code Payment Redirection": {
+        lblSlot1: "📷 Malicious QR Intercept Sticker Image",
+        lblSlot2: "📊 Merchant system payment redirection logs",
+        statement: "Scanned printed payment QR sticker overlay asset at storefront. Routing payload redirected transactional currency packets outwards to external proxy collector account destination.merchant@ybl.",
+        annot: { boxA: { top: "25%", left: "25%", width: "50%", height: "50%", text: "Redirect QR Target" } }
+    },
+    "Investment / Trading Scam": {
+        lblSlot1: "📷 Mock investment wallet growth canvas frame",
+        lblSlot2: "📷 Chat coordinator interaction logs",
+        statement: "Recruited into algorithmic portfolio growth ring via text network. Dashboard simulated massive index compounding metrics to block extraction capability until additional escrow capital added.",
+        annot: { boxA: { top: "30%", left: "15%", width: "65%", height: "40%", text: "Compounded Fraud Metrics" } }
+    },
+    "Cryptocurrency Fraud": {
+        lblSlot1: "📷 Blockchain explorer wallet metadata sheet",
+        lblSlot2: "📷 Fake automated crypto exchange system screen",
+        statement: "Transferred target digital capital pool into dynamic address configuration tracking asset matrix line: 0x71C...B29. Funds instantly dispersed across automated transaction mixing layer infrastructure.",
+        annot: { boxA: { top: "20%", left: "10%", width: "80%", height: "20%", text: "Target Hash Extraction" } }
+    },
+    "Fake Customer Care Scam": {
+        lblSlot1: "📷 Spoofed engine search contact directory card",
+        lblSlot2: "🎤 Inbound technical support assistance voice file",
+        statement: "Dialed indexing support directory entry number retrieved online. Suspect actors claimed system verification required execution of remote console access tools to secure operational credentials.",
+        annot: { boxA: { top: "15%", left: "10%", width: "75%", height: "25%", text: "Spoofed Phone Header" } }
+    },
+    "Fake Job Recruitment Scam": {
+        lblSlot1: "📷 High-fidelity digital corporate offer letter template",
+        lblSlot2: "📄 Inbound email dispatch routing profile header",
+        statement: "Provided descriptive employment validation letter containing corporate stamps. Requiring payment of security hardware deposit processing fees before activation of onboarding sequence.",
+        annot: { boxA: { top: "5%", left: "5%", width: "90%", height: "35%", text: "Faux Corporate Stamp" } }
+    },
+    "Fake Internship / Certificate Scam": {
+        lblSlot1: "📷 Spurious validation validation certificate print",
+        lblSlot2: "📄 Technical syllabus reference brief packet",
+        statement: "Purchased programmatic certification portfolio bundle online. Verification registry databases reflect non-existent institution infrastructure logs and manual signatures.",
+        annot: { boxA: { top: "70%", left: "40%", width: "40%", height: "20%", text: "Invalid Signature Mark" } }
+    },
+    "SIM Swap / OTP Fraud": {
+        lblSlot1: "📷 Cellular signal degradation alert capture",
+        lblSlot2: "📊 System authentication modification transaction logs",
+        statement: "Simultaneous connection drops observed following remote network switch parameters. Threat actors intercepted downstream two-factor authentication tokens to process high-value adjustments.",
+        annot: { boxA: { top: "50%", left: "20%", width: "60%", height: "30%", text: "Interception Point Link" } }
+    },
+    "Social Media Account Takeover": {
+        lblSlot1: "📷 Security credential override diagnostic message",
+        lblSlot2: "📷 Malicious chat messaging recovery requests",
+        statement: "Profile access parameters modified following link execution. System target distribution nodes dispatch cross-network asset coordinates to contact listings demanding dynamic security codes.",
+        annot: { boxA: { top: "10%", left: "10%", width: "70%", height: "20%", text: "Unauthorized Target Access" } }
+    },
+    "E-commerce Marketplace Fraud": {
+        lblSlot1: "📷 Fabricated automated logistics clearance notification",
+        lblSlot2: "📄 Mock commercial invoice print sheet",
+        statement: "Purchased high-value inventory listing assets via mock vendor configuration profile. Processing escrow payment strings forwards before the digital vendor channel was permanently deleted.",
+        annot: { boxA: { top: "30%", left: "15%", width: "55%", height: "25%", text: "Fake Logistics Ledger" } }
+    },
+    "Counterfeit Currency Investigation": {
+        lblSlot1: "📷 High-Resolution Note Front Geometry Specimen",
+        lblSlot2: "📷 High-Resolution Note Back Specimen",
+        statement: "Encountered counterfeit currency note parameters at checking kiosk with a ₹500 banknote serial: 8BM 189024. Physical optical security thread matches coordinates but fails under specialized UV spectrum shifts.",
+        annot: { boxA: { top: "35%", left: "68%", width: "25%", height: "15%", text: "Serial: 8BM 189024" }, boxB: { top: "48%", left: "38%", width: "6%", height: "45%", text: "Foil Security Thread" }, boxC: { top: "15%", left: "5%", width: "22%", height: "40%", text: "Watermark Fail" } }
+    }
+};
+
+document.addEventListener("DOMContentLoaded", () => { switchCrimeTemplate(); });
+
+function switchCrimeTemplate() {
+    const category = document.getElementById('crimeCategory').value;
+    const config = CRIME_PRESETS[category];
+
+    document.getElementById('lblSlot1').innerText = config.lblSlot1;
+    document.getElementById('lblSlot2').innerText = config.lblSlot2;
+    document.getElementById('statementTextarea').value = config.statement;
+
+    document.getElementById('fileSlot1').value = "";
+    document.getElementById('fileSlot2').value = "";
+    document.getElementById('canvasAnnotationFrame').classList.add('d-none');
+    
+    document.getElementById('idleScreen').classList.remove('d-none');
+    document.getElementById('processingScreen').classList.add('d-none');
+    document.getElementById('activeDiagnosticPanel').classList.add('d-none');
+    document.getElementById('deepAnalysisPanel').classList.add('d-none');
+    
+    document.getElementById('caseTopStatus').className = "badge bg-primary-subtle text-primary border ms-3 font-monospace";
+    document.getElementById('caseTopStatus').innerText = "● Under Analysis";
+
+    resetPipelineStepper();
+}
+
+function resetPipelineStepper() {
+    const steps = ['complaint', 'ocr', 'speech', 'metadata', 'threat', 'correlation', 'recommendation', 'report', 'fir', 'archive'];
+    steps.forEach(node => {
+        document.getElementById(`step-${node}`).className = "step-node" + (node === 'complaint' ? ' active' : '');
+    });
+}
+
+function runImageAnnotationCanvas(input) {
+    const frame = document.getElementById('canvasAnnotationFrame');
+    const image = document.getElementById('annotationRawImage');
+    const category = document.getElementById('crimeCategory').value;
+    const targets = CRIME_PRESETS[category].annot;
+
+    if (input.files && input.files.length > 0) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            image.src = e.target.result;
+            frame.classList.remove('d-none');
+            applyTargetCoords('annotBoxA', targets.boxA);
+            applyTargetCoords('annotBoxB', targets.boxB);
+            applyTargetCoords('annotBoxC', targets.boxC);
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function applyTargetCoords(id, config) {
+    const box = document.getElementById(id);
+    if (config) {
+        box.style.display = 'block';
+        box.style.top = config.top;
+        box.style.left = config.left;
+        box.style.width = config.width;
+        box.style.height = config.height;
+        box.innerText = `[${config.text}]`;
+    } else {
+        box.style.display = 'none';
+    }
+}
+
+// ADDITION 4: TIMED LOGS IN THE RUNTIME STATE MACHINE LOOP
+const ANIMATION_SEQUENCE_STEPS = [
+    { text: "Uploading Target Ingested Evidence Packages...", progress: 20, visual: "██░░░░░░░░ 20%" },
+    { text: "OCR Pipeline Vector Parsing Core Active...", progress: 40, visual: "████░░░░░░ 40% [Extracting Image Layer Context]" },
+    { text: "Metadata Structural Analysis & Link Assembly Execution...", progress: 60, visual: "██████░░░░ 60% [Verifying Cryptographic Bounds]" },
+    { text: "Threat Metric Classification Layer Initialization...", progress: 80, visual: "████████░░ 80% [Running Multi-Agent Core Engine]" },
+    { text: "Cross Correlation Validation Complete. Rendering Analytics Dashboard...", progress: 100, visual: "██████████ 100% [Forensic Compile Successful]" }
+];
+
+async function runEvidenceFusionEngine() {
+    const category = document.getElementById('crimeCategory').value;
+    const statement = document.getElementById('statementTextarea').value;
+    const caseId = document.getElementById('caseIdInput').value;
+    const executeBtn = document.getElementById('btnActionExecute');
+
+    const file1Selected = document.getElementById('fileSlot1').files.length > 0;
+    const file2Selected = document.getElementById('fileSlot2').files.length > 0;
+
+    executeBtn.disabled = true;
+    document.getElementById('idleScreen').classList.add('d-none');
+    document.getElementById('activeDiagnosticPanel').classList.add('d-none');
+    document.getElementById('processingScreen').classList.remove('d-none');
+
+    // Run Asynchronous Processing GUI State Loop
+    const statusTxt = document.getElementById('loadingStatusText');
+    const progressBar = document.getElementById('processingAnimBar');
+    const visualProgress = document.getElementById('processingVisualProgress');
+    visualProgress.innerHTML = "";
+
+    for (let i = 0; i < ANIMATION_SEQUENCE_STEPS.length; i++) {
+        await new Promise(resolve => setTimeout(resolve, 800));
+        statusTxt.innerText = ANIMATION_SEQUENCE_STEPS[i].text;
+        progressBar.style.width = `${ANIMATION_SEQUENCE_STEPS[i].progress}%`;
+        visualProgress.innerHTML += `⚙️ ${ANIMATION_SEQUENCE_STEPS[i].visual}<br>`;
+    }
+
+    // Process Complete API Trigger Sequence
+    document.getElementById('processingScreen').classList.add('d-none');
+    document.getElementById('activeDiagnosticPanel').classList.remove('d-none');
+    document.getElementById('socCoreBadge').innerText = "ENGINE EVALUATION COMPLETED";
+
+    const logContainer = document.getElementById('terminalLogFeed');
+    logContainer.innerHTML = "";
+    
+    setStepState('complaint', 'completed');
+    setStepState('ocr', 'active');
+
+    try {
+        const response = await fetch('{{ url_for("engine.analyze_fusion") }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                category: category,
+                statement: statement,
+                case_id: caseId,
+                has_file1: file1Selected,
+                has_file2: file2Selected
+            })
+        });
+        const data = await response.json();
+
+        // Update Chain of Custody Card
+        document.getElementById('custodyHash').innerText = data.evidence_hash;
+        document.getElementById('custodyTime').innerText = data.uploaded_time;
+
+        // Populate Granular Multi-Agent Accuracy
+        document.getElementById('lblConfOCR').innerText = `${data.confidence.ocr}%`;
+        document.getElementById('lblConfSpeech').innerText = `${data.confidence.speech}%`;
+        document.getElementById('lblConfMeta').innerText = `${data.confidence.metadata}%`;
+        document.getElementById('lblConfEntity').innerText = `${data.confidence.entities}%`;
+        document.getElementById('lblConfReason').innerText = `${data.confidence.reasoning}%`;
+        document.getElementById('lblConfOverall').innerText = `${data.confidence.overall}%`;
+
+        // Update Global UI Badges & Status Elements
+        document.getElementById('caseTopStatus').innerText = "● FIR Generated";
+        document.getElementById('caseTopStatus').className = "badge bg-danger-subtle text-danger border ms-3 font-monospace";
+        
+        document.getElementById('riskMeterBadge').innerText = data.risk_color;
+        document.getElementById('riskMeterBadge').className = `risk-badge risk-bg-${data.risk_color}`;
+
+        data.logs.forEach(logLine => {
+            const row = document.createElement('div');
+            row.className = "terminal-log-row text-white-50";
+            row.innerText = logLine;
+            logContainer.appendChild(row);
+        });
+
+        // Render Evidence Matrices
+        const ev1 = file1Selected ? document.getElementById('fileSlot1').files[0].name : "Screenshot_Specimen.png";
+        const ev2 = file2Selected ? document.getElementById('fileSlot2').files[0].name : "Audio_Inbound.wav";
+        
+        document.getElementById('evidenceSummaryGrid').innerHTML = `
+            <div class="col-md-4"><div class="p-2 rounded bg-dark border border-secondary text-center font-monospace" style="font-size: 0.68rem;"><span class="text-muted d-block">IMAGE MATRIX</span><strong class="text-info text-truncate d-block">${ev1}</strong><span class="text-success">Integrity: ${data.confidence.ocr}%</span></div></div>
+            <div class="col-md-4"><div class="p-2 rounded bg-dark border border-secondary text-center font-monospace" style="font-size: 0.68rem;"><span class="text-muted d-block">AUDIO STREAM</span><strong class="text-warning text-truncate d-block">${ev2}</strong><span class="text-warning">Integrity: ${data.confidence.speech}%</span></div></div>
+            <div class="col-md-4"><div class="p-2 rounded bg-dark border border-secondary text-center font-monospace" style="font-size: 0.68rem;"><span class="text-muted d-block">STATEMENT LOG</span><strong class="text-danger text-truncate d-block">Statement.txt</strong><span class="text-danger">Integrity: 96%</span></div></div>
+        `;
+
+        // Render Entity Catalog
+        document.getElementById('entitiesGrid').innerHTML = `
+            <div class="col-md-3 col-6"><div class="p-2 bg-dark rounded text-center"><small class="text-muted d-block font-monospace">Phone Vector</small><span class="font-monospace fw-bold text-warning">${data.entities.phone}</span></div></div>
+            <div class="col-md-3 col-6"><div class="p-2 bg-dark rounded text-center"><small class="text-muted d-block font-monospace">Destination UPI</small><span class="font-monospace fw-bold text-info">${data.entities.upi}</span></div></div>
+            <div class="col-md-3 col-6"><div class="p-2 bg-dark rounded text-center"><small class="text-muted d-block font-monospace">Authority Node</small><span class="font-monospace fw-bold text-danger">${data.entities.agency}</span></div></div>
+            <div class="col-md-3 col-6"><div class="p-2 bg-dark rounded text-center"><small class="text-muted d-block font-monospace">Parsed Target Value</small><span class="font-monospace fw-bold text-success">${data.entities.money}</span></div></div>
+        `;
+
+        document.getElementById('execSummaryText').innerText = data.executive_summary;
+
+        // Inject High-Priority Alert Box Elements
+        const highPriorityBox = document.getElementById('aiBoxRecommendations');
+        highPriorityBox.innerHTML = "";
+        data.recommendations.forEach(rec => {
+            highPriorityBox.innerHTML += `<div>⚠️ <strong class="text-danger">[${rec.priority}]</strong> ${rec.title} - <span class="text-white-50">${rec.level}</span></div>`;
+        });
+
+        // Dynamic Incident Threat Timeline Integration
+        const timelineWrap = document.getElementById('threatTimelineWrapper');
+        timelineWrap.innerHTML = `
+            <div>🕒 <strong>20:10</strong> - Citizen Incident Complaint Filed Target Payload Detected</div>
+            <div>➔ <strong>20:12</strong> - Optical Character Recognition Analytics Completed Successfully [96%]</div>
+            <div>➔ <strong>20:13</strong> - Vocal Stress Acoustic Database Alignment Completed [91%]</div>
+            <div>➔ <strong>20:14</strong> - Entity Match Extraction Vectors Linked to Cyber Ledger [98%]</div>
+            <div>➔ <strong>20:16</strong> - AI Verification Module Execution Confirmed Network Integrity Matrix</div>
+            <div>➔ <strong>20:18</strong> - Automated Schedule 154 CrPC Incident FIR Draft Package Assembled</div>
+        `;
+
+        // Fill Scorecard Summary
+        document.getElementById('summaryThreatType').innerText = category;
+        document.getElementById('summaryConf').innerText = `${data.overall_confidence}%`;
+
+        // Threat Score Details
+        document.getElementById('additiveThreatScore').innerText = data.risk_score;
+        let mathString = "";
+        Object.entries(data.threat_components).forEach(([key, val]) => { mathString += `+${val} : ${key}<br>`; });
+        document.getElementById('threatAdditiveFormula').innerHTML = mathString;
+
+        // Severity Values
+        document.getElementById('sevFinancial').innerText = `${data.severity_matrix.Financial}%`;
+        document.getElementById('sevIdentity').innerText = `${data.severity_matrix.Identity}%`;
+        document.getElementById('sevPsychological').innerText = `${data.severity_matrix.Psychological}%`;
+        document.getElementById('sevCrime').innerText = `${data.severity_matrix.Organized_Crime}%`;
+        document.getElementById('sevPublic').innerText = `${data.severity_matrix.Public_Safety}%`;
+
+        // Playbook target compilation
+        const playbookList = document.getElementById('containmentPlaybookTarget');
+        playbookList.innerHTML = "";
+        data.recommendations.forEach(rec => {
+            playbookList.innerHTML += `<li class="mb-1 text-white-50 border-bottom border-secondary border-opacity-30 pb-1"><span class="badge bg-danger-subtle text-danger font-monospace me-1">${rec.priority}</span> <strong>${rec.title}</strong></li>`;
+        });
+
+        // Geo Matrix
+        document.getElementById('geoTargetName').innerText = data.geo_intel.location;
+        document.getElementById('geoClusterInfo').innerText = `Radius: ${data.geo_intel.radius} | Level: ${data.geo_intel.cluster_level}`;
+        document.getElementById('geoPeakTime').innerText = data.geo_intel.peak_hour;
+        document.getElementById('geoTrend').innerText = data.geo_intel.trend;
+        document.getElementById('geoCountToday').innerText = data.geo_intel.reported_today;
+        document.getElementById('geoCountWeek').innerText = data.geo_intel.prev_week;
+
+        document.getElementById('flowMuleNode').innerText = data.entities.upi !== 'Not Found' ? data.entities.upi : "Suspect UPI";
+
+        // Cross Case Mapping Grid
+        const simCasesBox = document.getElementById('similarCasesTarget');
+        simCasesBox.innerHTML = "";
+        data.similar_cases.forEach(sc => {
+            simCasesBox.innerHTML += `
+                <div class="p-2 border border-secondary border-opacity-50 rounded bg-dark mb-1 d-flex justify-content-between align-items-center">
+                    <div><span>Incident File: <strong>${sc.id}</strong> (${sc.location})</span><br><span class="text-muted">Links: Phone (${sc.common_phone}), Net (${sc.network})</span></div>
+                    <span class="fw-bold text-danger">Match: ${sc.match}</span>
+                </div>
+            `;
+        });
+
+        // Set Export suite query tags
+        const queryParams = `?category=${encodeURIComponent(category)}&case_id=${encodeURIComponent(caseId)}&statement=${encodeURIComponent(statement)}`;
+        document.getElementById('dlCaseReport').href = `{{ url_for('engine.download_document', doc_type='case_report') }}${queryParams}`;
+        document.getElementById('dlOcr').href = `{{ url_for('engine.download_document', doc_type='ocr_result') }}${queryParams}`;
+        document.getElementById('dlSpeech').href = `{{ url_for('engine.download_document', doc_type='speech_transcript') }}${queryParams}`;
+        document.getElementById('dlFir').href = `{{ url_for('engine.download_document', doc_type='fir_draft') }}${queryParams}`;
+
+        advanceStepperNodes();
+        document.getElementById('deepAnalysisPanel').classList.remove('d-none');
+        document.getElementById('deepAnalysisPanel').scrollIntoView({ behavior: 'smooth' });
+        executeBtn.disabled = false;
+
+    } catch (err) {
+        console.error("🚨 Forensic runtime engine fault:", err);
+        executeBtn.disabled = false;
+    }
+}
+
+function setStepState(id, state) {
+    const el = document.getElementById(`step-${id}`);
+    if (el) el.className = "step-node " + state;
+}
+
+function advanceStepperNodes() {
+    setTimeout(() => { setStepState('ocr', 'completed'); setStepState('speech', 'active'); }, 200);
+    setTimeout(() => { setStepState('speech', 'completed'); setStepState('metadata', 'active'); }, 400);
+    setTimeout(() => { setStepState('metadata', 'completed'); setStepState('threat', 'active'); }, 600);
+    setTimeout(() => { setStepState('threat', 'completed'); setStepState('correlation', 'active'); }, 800);
+    setTimeout(() => { setStepState('correlation', 'completed'); setStepState('recommendation', 'active'); setStepState('report', 'active'); }, 1000);
+    setTimeout(() => { setStepState('recommendation', 'completed'); setStepState('report', 'completed'); setStepState('fir', 'active'); }, 1200);
+    setTimeout(() => { setStepState('fir', 'completed'); setStepState('archive', 'active'); }, 1400);
+}
+</script>
+{% endblock %}

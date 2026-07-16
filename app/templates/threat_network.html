@@ -1,0 +1,561 @@
+{% extends "base.html" %}
+
+{% block page_title %}Network Intelligence Builder{% endblock %}
+
+{% block extra_head %}
+<style>
+    :root {
+        --edge-call: #3b82f6;
+        --edge-upi: #10b981;
+        --edge-transfer: #f59e0b;
+        --edge-device: #8b5cf6;
+        --edge-critical: #ef4444;
+        --bg-panel: #0f172a;
+        --border-slate: rgba(255, 255, 255, 0.08);
+    }
+
+    .workstation-container {
+        font-family: 'JetBrains Mono', monospace, sans-serif;
+        font-size: 0.75rem;
+    }
+
+    .panel-card {
+        background: rgba(15, 23, 42, 0.7);
+        border: 1px solid var(--border-slate);
+        border-radius: 4px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+    }
+
+    /* Edge Color Schematics */
+    .edge-call { stroke: var(--edge-call); }
+    .edge-upi { stroke: var(--edge-upi); stroke-dasharray: 4; }
+    .edge-transfer { stroke: var(--edge-transfer); }
+    .edge-device { stroke: var(--edge-device); stroke-width: 2px; }
+    .edge-critical { stroke: var(--edge-critical); }
+
+    /* Pipeline Step Markers */
+    .pipeline-badge {
+        font-size: 0.65rem;
+        padding: 0.25rem 0.5rem;
+        background: #1e293b;
+        border: 1px solid var(--border-slate);
+        color: #64748b;
+        border-radius: 2px;
+        transition: all 0.3s ease;
+    }
+    .pipeline-badge.completed {
+        border-color: var(--edge-upi);
+        color: var(--edge-upi);
+        background: rgba(16, 185, 129, 0.05);
+    }
+    .pipeline-badge.active-processing {
+        border-color: var(--edge-call);
+        color: var(--edge-call);
+        background: rgba(59, 130, 246, 0.1);
+        animation: activePulse 1.5s infinite alternate;
+    }
+    @keyframes activePulse {
+        0% { box-shadow: 0 0 4px rgba(59, 130, 246, 0.2); }
+        100% { box-shadow: 0 0 12px rgba(59, 130, 246, 0.5); }
+    }
+
+    /* Interactive Graph Canvas Window */
+    .viewport-canvas {
+        background: radial-gradient(circle at center, #090d16 0%, #020408 100%);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        height: 460px;
+        position: relative;
+    }
+
+    .interactive-node { cursor: pointer; transition: transform 0.2s; }
+    .interactive-node:hover { transform: scale(1.12); }
+
+    .interactive-edge {
+        cursor: pointer;
+        stroke-width: 2;
+        transition: stroke-width 0.2s, stroke 0.2s;
+    }
+    .interactive-edge:hover {
+        stroke-width: 4 !important;
+        filter: drop-shadow(0 0 4px #fff);
+    }
+
+    /* Risk Bar Arrays */
+    .risk-meter-fill {
+        font-family: monospace;
+        letter-spacing: -1px;
+    }
+
+    /* Stylized Jurisdictional Mini Grid */
+    .geo-matrix-box {
+        width: 12px;
+        height: 12px;
+        display: inline-block;
+        margin-right: 2px;
+        border-radius: 1px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid workstation-container text-white px-2">
+
+    <!-- TOP HEADER: LIVE COUNTERS, SEARCH CONTROLS & OMNI SEARCH DECK -->
+    <div class="row g-2 mb-2 align-items-center bg-dark p-2 rounded border border-secondary mx-0">
+        <div class="col-md-3">
+            <div class="input-group input-group-sm">
+                <span class="input-group-text bg-secondary border-secondary text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
+                <input type="text" class="form-control bg-dark border-secondary text-white" style="font-size:0.7rem;" placeholder="Search Phone, Wallet, UPI, IMEI, Case ID..." onkeyup="executeTargetSearch(this.value)">
+            </div>
+        </div>
+        <div class="col-md-5 d-flex gap-3 align-items-center font-monospace mb-0" style="font-size: 0.72rem;">
+            <div><span class="text-muted">LIVE NODES:</span> <strong id="lbl-live-nodes">18</strong></div>
+            <div><span class="text-muted">EDGES:</span> <strong id="lbl-live-edges">34</strong></div>
+            <div><span class="text-muted">AI AGENT LAYER:</span> <strong class="text-success"><i class="fa-solid fa-circle-check"></i> ACTIVE</strong></div>
+            <div><span class="text-muted">LATENCY:</span> <strong class="text-info">1.2s</strong></div>
+        </div>
+        <div class="col-md-4 d-flex justify-content-end gap-2">
+            <button class="btn btn-sm btn-primary fw-bold font-monospace px-3" onclick="triggerInvestigationPlayback()">
+                <i class="fa-solid fa-play me-1"></i> REPLAY INVESTIGATION PLAYBACK
+            </button>
+        </div>
+    </div>
+
+    <!-- DYNAMIC CORE DATA PIPELINE STATE INDICATOR BAR -->
+    <div class="d-flex justify-content-between gap-1 mb-2 font-monospace" id="pipeline-progress-bar">
+        <span class="pipeline-badge flex-fill text-center id-step-0">1. Evidence Uploaded</span>
+        <span class="pipeline-badge flex-fill text-center id-step-1">2. OCR Extraction</span>
+        <span class="pipeline-badge flex-fill text-center id-step-2">3. Speech Parsing</span>
+        <span class="pipeline-badge flex-fill text-center id-step-3">4. Token Ingestion</span>
+        <span class="pipeline-badge flex-fill text-center id-step-4">5. Knowledge Graph Synthesis</span>
+        <span class="pipeline-badge flex-fill text-center id-step-5">6. Cluster Isolations</span>
+        <span class="pipeline-badge flex-fill text-center id-step-6">7. Forensic Package Sealed</span>
+    </div>
+
+    <div class="row g-2">
+        <!-- LEFT SYSTEM FOOTPRINT: CONTROLS, DYNAMIC GRAPH ENGINE, PIPELINE ANIMATIONS -->
+        <div class="col-xl-7">
+            
+            <!-- GRAPH COMPONENT SYSTEM FILTERS -->
+            <div class="panel-card d-flex gap-2 py-1.5 align-items-center flex-wrap">
+                <span class="text-muted font-monospace me-2" style="font-size:0.68rem;">GRAPH FILTERS:</span>
+                <button class="btn btn-xs btn-outline-secondary text-white py-0.5 px-2 active" style="font-size:0.65rem;" onclick="filterGraph('all')">Show All</button>
+                <button class="btn btn-xs btn-outline-primary text-white py-0.5 px-2" style="font-size:0.65rem;" onclick="filterGraph('high-risk')">High Risk Only</button>
+                <button class="btn btn-xs btn-outline-warning text-white py-0.5 px-2" style="font-size:0.65rem;" onclick="filterGraph('money-flow')">Money Flow Chains</button>
+            </div>
+
+            <!-- INTERACTIVE OPERATIONAL GRAPH VIEWPORT CANVAS -->
+            <div class="viewport-canvas rounded mb-2">
+                <svg width="100%" height="100%" viewBox="0 0 600 420" style="background:transparent;" id="master-graph-svg">
+                    <!-- DEFINITIONS LAYER FOR ARROWHEAD COLOR MATRICES -->
+                    <defs>
+                        <marker id="arr-call" markerWidth="8" markerHeight="8" refX="18" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="var(--edge-call)"/></marker>
+                        <marker id="arr-upi" markerWidth="8" markerHeight="8" refX="18" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="var(--edge-upi)"/></marker>
+                        <marker id="arr-transfer" markerWidth="8" markerHeight="8" refX="18" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="var(--edge-transfer)"/></marker>
+                        <marker id="arr-device" markerWidth="8" markerHeight="8" refX="18" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="var(--edge-device)"/></marker>
+                        <marker id="arr-critical" markerWidth="8" markerHeight="8" refX="18" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="var(--edge-critical)"/></marker>
+                    </defs>
+                    
+                    <!-- EXPLAINABLE EDGE INTERACTIVE VECTORS -->
+                    <g id="graph-edges-group">
+                        <line class="interactive-edge edge-call" x1="160" y1="130" x2="300" y2="200" marker-end="url(#arr-call)" onclick="inspectEdge('e-phone-syndicate')"/>
+                        <line class="interactive-edge edge-device" x1="440" y1="130" x2="300" y2="200" marker-end="url(#arr-device)" onclick="inspectEdge('e-burner-syndicate')"/>
+                        <line class="interactive-edge edge-upi" x1="300" y1="200" x2="200" y2="290" marker-end="url(#arr-upi)" onclick="inspectEdge('e-syndicate-mule')"/>
+                        <line class="interactive-edge edge-transfer" x1="300" y1="200" x2="400" y2="290" marker-end="url(#arr-transfer)" onclick="inspectEdge('e-syndicate-crypto')"/>
+                        <line class="interactive-edge edge-critical" x1="80" y1="80" x2="160" y2="130" marker-end="url(#arr-critical)" onclick="inspectEdge('e-victim-phone')"/>
+                    </g>
+                    
+                    <!-- TARGET HUB NODES LAYER -->
+                    <g id="graph-nodes-group">
+                        <!-- Mewat Core Node Array -->
+                        <g class="interactive-node el-node-critical" id="node-syndicate" transform="translate(300,200)" onclick="inspectNode('syndicate')">
+                            <circle r="14" fill="#ef4444"/><circle r="22" fill="#ef4444" opacity="0.15"/>
+                            <text y="32" fill="#ef4444" font-weight="bold" font-size="9" text-anchor="middle">Mewat Syndicate [Node-X]</text>
+                        </g>
+                        <!-- Phone Vector A -->
+                        <g class="interactive-node el-node-high" id="node-phone1" transform="translate(160,130)" onclick="inspectNode('phone1')">
+                            <circle r="10" fill="#3b82f6"/>
+                            <text y="-14" fill="#fff" font-size="9" text-anchor="middle">+91 81234-XXXXX (97%)</text>
+                        </g>
+                        <!-- Phone Vector B -->
+                        <g class="interactive-node el-node-high" id="node-phone2" transform="translate(440,130)" onclick="inspectNode('phone2')">
+                            <circle r="10" fill="#3b82f6"/>
+                            <text y="-14" fill="#fff" font-size="9" text-anchor="middle">+91 98765-XXXXX (91%)</text>
+                        </g>
+                        <!-- Mule Layer Account -->
+                        <g class="interactive-node el-node-high" id="node-wallet1" transform="translate(200,290)" onclick="inspectNode('wallet1')">
+                            <circle r="11" fill="#f59e0b"/>
+                            <text y="22" fill="#f59e0b" font-size="9" text-anchor="middle">Mule: HDFC (88%)</text>
+                        </g>
+                        <!-- Offshore Asset Target -->
+                        <g class="interactive-node el-node-high" id="node-wallet2" transform="translate(400,290)" onclick="inspectNode('wallet2')">
+                            <circle r="11" fill="#8b5cf6"/>
+                            <text y="22" fill="#8b5cf6" font-size="9" text-anchor="middle">Binance Core (96%)</text>
+                        </g>
+                        <!-- Aggrieved Target Profile -->
+                        <g class="interactive-node el-node-low" id="node-victim1" transform="translate(80,80)" onclick="inspectNode('victim1')">
+                            <circle r="8" fill="#10b981"/>
+                            <text y="-12" fill="#9ca3af" font-size="8" text-anchor="middle">Victim A (100%)</text>
+                        </g>
+                    </g>
+                </svg>
+                <div class="position-absolute bottom-0 start-0 p-2 font-monospace text-muted" style="font-size: 0.65rem;">
+                    💡 Hackathon Guide: Click edges to view AI explanation metrics; click nodes for forensic dossiers.
+                </div>
+            </div>
+
+            <!-- FORENSIC TIMELINE & METHODICAL FLOW MAPS -->
+            <div class="row g-2">
+                <div class="col-md-6">
+                    <div class="panel-card h-100">
+                        <div class="d-flex justify-content-between align-items-center border-bottom border-secondary pb-1 mb-2">
+                            <span class="fw-bold text-info"><i class="fa-solid fa-clock-history me-1"></i>AI Incident Timeline</span>
+                            <span class="text-muted" style="font-size:0.65rem;">True Sequence Logs</span>
+                        </div>
+                        <div class="font-monospace text-muted" style="font-size: 0.7rem; line-height: 1.45;">
+                            <div><span class="text-white">10:11</span> Call Initiated via Masked VoIP Gateway Vector</div>
+                            <div><span class="text-warning">10:12</span> AI Voice Clone Signature Match Injected</div>
+                            <div><span class="text-danger">10:14</span> Coercive OTP Access Extracted From Victim Node</div>
+                            <div><span class="text-white">10:15</span> Capital Routed Direct to HDFC Mule Node Layer</div>
+                            <div><span class="text-info">10:16</span> Asset Transit Instantly Converted to Stablecoins</div>
+                            <div><span class="text-purple">10:17</span> Privacy Mixing Protocol Triggered via Tornado Module</div>
+                            <div><span class="text-danger">10:18</span> Capital Dispersed to Offshore Exchange Accounts</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="panel-card h-100">
+                        <div class="d-flex justify-content-between align-items-center border-bottom border-secondary pb-1 mb-2">
+                            <span class="fw-bold text-purple"><i class="fa-solid fa-network-wired me-1"></i>Isolated Cluster Topology</span>
+                            <span class="badge bg-dark border border-secondary text-white" style="font-size:0.6rem;">Neo4j Engine Sync</span>
+                        </div>
+                        <div class="font-monospace text-muted mb-0" style="font-size:0.7rem;">
+                            <div class="d-flex justify-content-between py-0.5 border-bottom border-secondary border-opacity-20"><span>Cluster Alpha:</span><span class="text-success fw-bold">Victim Group Set</span></div>
+                            <div class="d-flex justify-content-between py-0.5 border-bottom border-secondary border-opacity-20"><span>Cluster Beta:</span><span class="text-danger fw-bold">Syndicate Core Framework</span></div>
+                            <div class="d-flex justify-content-between py-0.5 border-bottom border-secondary border-opacity-20"><span>Cluster Gamma:</span><span class="text-warning fw-bold">Mule Routing Matrix</span></div>
+                            <div class="d-flex justify-content-between py-0.5 border-bottom border-secondary border-opacity-20"><span>Cluster Delta:</span><span class="text-info fw-bold">Crypto Conversion Nodes</span></div>
+                            <div class="d-flex justify-content-between py-0.5"><span>Cluster Epsilon:</span><span class="text-purple fw-bold">VoIP Gateway Proxies</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT SYSTEM FOOTPRINT: CONTEXUAL INTELLIGENCE PANELS & EXPORT SYSTEM -->
+        <div class="col-xl-5">
+            
+            <!-- AI GENERATED EXECUTIVE SUMMARY CONTROL -->
+            <div class="panel-card border-top border-2 border-purple" style="background: rgba(139, 92, 246, 0.03); border-color: var(--edge-device) !important;">
+                <h6 class="text-white font-monospace mb-1 fw-bold" style="font-size:0.8rem;"><i class="fa-solid fa-brain text-purple me-1"></i>AI Core Aggregation Executive Summary</h6>
+                <div class="row g-2 my-1 text-center font-monospace text-muted" style="font-size:0.68rem;">
+                    <div class="col-4 border-end border-secondary border-opacity-30"><span class="d-block text-white fw-bold">12 Wallets</span>Linked Trace</div>
+                    <div class="col-4 border-end border-secondary border-opacity-30"><span class="d-block text-white fw-bold">18 Victims</span>Aggregated</div>
+                    <div class="col-4"><span class="d-block text-white fw-bold">3 Burner SIMs</span>Isolated Node</div>
+                </div>
+                <div class="p-1.5 bg-dark border border-secondary rounded font-monospace text-muted mt-2" style="font-size:0.68rem;">
+                    <strong class="text-danger">RECOMMENDED INTERVENTION PROTOCOLS:</strong> Freeze target financial ledgers instantly; Dispatch programmatic alerts to central bank grid; Autogenerate regional jurisdiction FIR package.
+                </div>
+            </div>
+
+            <!-- DYNAMIC TARGET ANALYSIS INSPECTION CARD -->
+            <div class="panel-card border-top border-2 border-info" id="dynamic-intel-card-panel">
+                <h6 class="text-white font-monospace mb-1 fw-bold" id="intel-card-header"><i class="fa-solid fa-fingerprint text-info me-1"></i>Operational Target Dossier</h6>
+                <div id="intel-card-viewport">
+                    <!-- Default System Entry State Display -->
+                    <div class="p-4 text-center font-monospace text-muted rounded bg-dark border border-secondary border-opacity-50 my-2">
+                        <i class="fa-solid fa-circle-nodes fa-2x mb-2 text-secondary opacity-50 d-block"></i>
+                        Select a network architecture node or link vector to load AI lineage metrics.
+                    </div>
+                </div>
+            </div>
+
+            <!-- RE-ENGINEERED COMPLETENESS & LEGAL SCORE CONTEXT -->
+            <div class="panel-card">
+                <div class="row g-2">
+                    <div class="col-sm-6 font-monospace" style="font-size: 0.7rem;">
+                        <span class="text-white font-weight-bold d-block mb-1"><i class="fa-solid fa-shield-halved text-success me-1"></i>Evidence Completeness Matrix</span>
+                        <div class="d-flex justify-content-between"><span>OCR Extraction Payload:</span><span class="text-success">✔ Verified</span></div>
+                        <div class="d-flex justify-content-between"><span>Audio Voiceprint Telemetry:</span><span class="text-success">✔ Verified</span></div>
+                        <div class="d-flex justify-content-between"><span>System Metadata Packages:</span><span class="text-success">✔ Verified</span></div>
+                        <div class="d-flex justify-content-between"><span>Chain of Custody Ledger:</span><span class="text-success">✔ Sealed</span></div>
+                    </div>
+                    <div class="col-sm-6 border-start border-secondary border-opacity-30 ps-2 font-monospace">
+                        <span class="text-white font-weight-bold d-block mb-0.5"><i class="fa-solid fa-scale-balanced text-warning me-1"></i>Legal Score Metrics</span>
+                        <div class="fs-6 fw-bold text-danger mb-0 font-monospace">██████████ 96%</div>
+                        <div class="text-muted" style="font-size:0.65rem;">COURT ADMISSIBLE: <span class="text-success fw-bold">YES</span></div>
+                        <div class="text-muted text-truncate mt-1" style="font-size:0.6rem;">SHA256: 8a4bc8f12d984c00e1215b...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 12 JURISDICTIONAL REGULATORY MATRIX MAP GRID -->
+            <div class="panel-card">
+                <h6 class="text-white font-monospace mb-1 fw-bold" style="font-size:0.75rem;"><i class="fa-solid fa-earth-asia text-warning me-1"></i>Cross-Jurisdiction Syndicate Heat Density</h6>
+                <div class="d-flex gap-2 align-items-center bg-dark p-2 rounded border border-secondary mb-1">
+                    <div class="flex-grow-1">
+                        <div class="d-flex font-monospace text-muted justify-content-between mb-0.5" style="font-size:0.65rem;">
+                            <span>UP Grid (<span class="text-danger">Red</span>)</span>
+                            <span>Delhi Central (<span class="text-warning">Orange</span>)</span>
+                            <span>MP Sector (<span class="text-info">Yellow</span>)</span>
+                        </div>
+                        <div>
+                            <!-- Simulated Heat Matrix Blocks Grid -->
+                            <span class="geo-matrix-box" style="background:var(--edge-critical)"></span>
+                            <span class="geo-matrix-box" style="background:var(--edge-critical)"></span>
+                            <span class="geo-matrix-box" style="background:var(--edge-critical)"></span>
+                            <span class="geo-matrix-box" style="background:var(--edge-transfer)"></span>
+                            <span class="geo-matrix-box" style="background:var(--edge-transfer)"></span>
+                            <span class="geo-matrix-box" style="background:var(--edge-upi)"></span>
+                            <span class="geo-matrix-box" style="background:var(--edge-upi)"></span>
+                            <span class="geo-matrix-box" style="background:#334155"></span>
+                            <span class="geo-matrix-box" style="background:#334155"></span>
+                            <span class="geo-matrix-box" style="background:#334155"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- EXPORT DECISION MATRIX & ACTION INTERFACES -->
+            <div class="panel-card border-secondary bg-dark mb-0">
+                <span class="text-muted d-block font-monospace mb-2" style="font-size:0.68rem;">ENFORCED COMPLIANCE AND LAW ACTIONS:</span>
+                <div class="row g-1 mb-2">
+                    <div class="col-6"><button class="btn btn-xs btn-outline-secondary text-white w-100 py-1" style="font-size:0.65rem;" onclick="alert('Exporting Schema Package to Neo4j GraphML...')"><i class="fa-solid fa-file-export me-1 text-info"></i>Export GraphML</button></div>
+                    <div class="col-6"><button class="btn btn-xs btn-outline-secondary text-white w-100 py-1" style="font-size:0.65rem;" onclick="alert('Sealing Hash Evidence Vault Matrix Package...')"><i class="fa-solid fa-file-zipper me-1 text-success"></i>Export Sealed ZIP</button></div>
+                </div>
+                <button class="btn btn-success text-dark font-monospace fw-bold w-100 py-2" style="font-size:0.75rem;" onclick="alert('Generating Cryptographically Signed Court Packets...')">
+                    <i class="fa-solid fa-gavel me-1"></i> COMPILE COURT-ADMISSIBLE FORENSIC EVIDENCE PACKAGE
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- CLIENT JAVASCRIPT WORKSTATION ENGINE LOGIC LAYER -->
+<script>
+    // Comprehensive Data Repositories for explaining Nodes and Edges
+    const analyticalNodes = {
+        syndicate: {
+            title: "Mewat Core Syndicate Hub",
+            meta: "CENTRAL MALICIOUS NEXUS",
+            riskText: "██████████ 98% CRITICAL",
+            stats: [
+                { k: "Linked Cases", v: "18 Active Dossiers" },
+                { k: "Modus Operandi", v: "Digital Arrest & System Extortion" },
+                { k: "Device Signature Match", v: "Shared Burner Framework Pool ID-09" }
+            ]
+        },
+        phone1: {
+            title: "Communication Endpoint: +91 81234-XXXXX",
+            meta: "SPOOFED VOIP OUTBOUND CHANNEL",
+            riskText: "████████░░ 97% HIGH RISK",
+            stats: [
+                { k: "Telecom Operator", v: "Reliance Jio Network Core" },
+                { k: "Hardware IMEI String", v: "86029104-9923-881" },
+                { k: "Assigned SIM Count", v: "4 Burner Profiles on Identical Tower Cluster" },
+                { k: "AI Correlation Basis", v: "Matched via Hardware IMEI + Audio Voiceprint Match" }
+            ]
+        },
+        wallet1: {
+            title: "Financial Destination: HDFC Bank Acct ...9021",
+            meta: "PRIMARY LAYER MULE COLLECTION ACCOUNT",
+            riskText: "████████░░ 88% HIGH RISK",
+            stats: [
+                { k: "Account Ledger Custodian", v: "HDFC Central Bank Grid" },
+                { k: "Reported Linked Victim Influx", v: "12 Separate Incidents" },
+                { k: "Interbank Freeze Directive", v: "ENFORCED STATUS: SUSPENDED/FROZEN" }
+            ]
+        },
+        wallet2: {
+            title: "Asset Transit: Binance Deposit 0x7a2...",
+            meta: "OFFSHORE LIQUIDITY EVASION OUTLET",
+            riskText: "█████████░ 96% CRITICAL",
+            stats: [
+                { k: "Crypto Exchange Entity", v: "Binance Liquidity Framework Pool" },
+                { k: "Asset Denomination Token", v: "USDT Stablecoin Layer String" },
+                { k: "Cryptographic Verified Freeze", v: "YES - WALLET LEVELED UNDER FREEZE ACTION" }
+            ]
+        },
+        victim1: {
+            title: "Aggrieved Profile: Target Case Registry File A",
+            meta: "VERIFIED INGESTED CITIZEN ENTRY",
+            riskText: "██░░░░░░░░ 100% SECURED SOURCE",
+            stats: [
+                { k: "Initial Report Context", value: "Digital Arrest Extortion Scheme Manifest" },
+                { k: "Filing Jurisdiction", value: "Uttar Pradesh Cyber Crime Command Sector" }
+            ]
+        }
+    };
+
+    const analyticalEdges = {
+        'e-phone-syndicate': {
+            title: "Link Vector: +91 81234-XXXXX ➔ Mewat Core Hub",
+            meta: "AI LINK EXPLANATION LINEAGE",
+            stats: [
+                { k: "Shared Hardware Footprint Match", v: "92% Matrix Probability" },
+                { k: "Shared Routing IP Nodes", v: "87% Telemetry Verification" },
+                { k: "Shared Target Gateway QR Payload", v: "94% Cryptographic Correlation" },
+                { k: "Auditory Voice Clone Verification", v: "98% Biometric Confidence Level" }
+            ]
+        },
+        'e-burner-syndicate': {
+            title: "Link Vector: +91 98765-XXXXX ➔ Mewat Core Hub",
+            meta: "AI HARDWARE LINK ANALYSIS",
+            stats: [
+                { k: "Identical Android ID Linkage", v: "95% Certainty Check" },
+                { k: "Proximity Tower Cell Ping Logs", v: "91% Locational Vector Match" }
+            ]
+        },
+        'e-syndicate-mule': {
+            title: "Link Vector: Mewat Core Hub ➔ HDFC Bank Account",
+            meta: "FINANCIAL ROUTING CORRELATION LINEAGE",
+            stats: [
+                { k: "Immediate Post-Call Capital Outflow", v: "99% Timed Sync Certainty" },
+                { k: "Repeated Syndicate Device API Sign-ins", v: "88% Correlation Factor" }
+            ]
+        },
+        'e-syndicate-crypto': {
+            title: "Link Vector: Mewat Core Hub ➔ Binance Deposit Address",
+            meta: "OFFSHORE BLOCKCHAIN HOPS TRACKING",
+            stats: [
+                { k: "Automated Conversion String Tracking", v: "96% Certainty Signature" },
+                { k: "Layer-2 Token Route Association", v: "94% Pattern Detection Match" }
+            ]
+        },
+        'e-victim-phone': {
+            title: "Link Vector: Victim Case Profile A ➔ +91 81234-XXXXX",
+            meta: "INBOUND TARGET COMPLAINT LINKAGE",
+            stats: [
+                { k: "Call Detail Records Ingestion Check", v: "100% Core Match" },
+                { k: "Extracted Inbound VoIP Packet Frame", v: "Verified Log Timestamp Match" }
+            ]
+        }
+    };
+
+    // Client Viewport UI Rendering Engine Functionality
+    function inspectNode(nodeKey) {
+        const item = analyticalNodes[nodeKey];
+        if(!item) return;
+        renderTargetPanel(item.title, item.meta, item.riskText, item.stats);
+    }
+
+    function inspectEdge(edgeKey) {
+        const item = analyticalEdges[edgeKey];
+        if(!item) return;
+        renderTargetPanel(item.title, item.meta, "EXPLAINABLE AI REASONING METRICS", item.stats);
+    }
+
+    function renderTargetPanel(title, meta, alertMeter, specs) {
+        let displayHTML = `
+            <div class="mb-2 font-monospace">
+                <span class="d-block text-white fw-bold fs-6 mb-0.5">${title}</span>
+                <span class="badge bg-dark border border-secondary text-info mb-1.5" style="font-size:0.6rem;">${meta}</span>
+                <div class="text-danger fw-bold font-monospace" style="font-size:0.75rem;">${alertMeter}</div>
+            </div>
+            <table class="table table-sm table-dark table-borderless font-monospace mb-0" style="font-size: 0.7rem; border-top: 1px solid rgba(255,255,255,0.06);">
+                <tbody>
+        `;
+        specs.forEach(s => {
+            displayHTML += `
+                <tr>
+                    <td class="text-muted py-1" style="width: 45%;">${s.k || s.label}:</td>
+                    <td class="text-white py-1">${s.v || s.value}</td>
+                </tr>
+            `;
+        });
+        displayHTML += `</tbody></table>`;
+        document.getElementById('intel-card-viewport').innerHTML = displayHTML;
+    }
+
+    // Dynamic Functional Filter Manipulation Controls
+    function filterGraph(filterType) {
+        const allNodes = document.querySelectorAll('.interactive-node');
+        const allEdges = document.querySelectorAll('.interactive-edge');
+        
+        allNodes.forEach(n => n.style.opacity = "1");
+        allEdges.forEach(e => e.style.opacity = "1");
+
+        if(filterType === 'high-risk') {
+            document.querySelectorAll('.el-node-low').forEach(n => n.style.opacity = "0.15");
+            allEdges.forEach(e => {
+                if(!e.classList.contains('edge-critical') && !e.classList.contains('edge-transfer')) {
+                    e.style.opacity = "0.15";
+                }
+            });
+        } else if (filterType === 'money-flow') {
+            allNodes.forEach(n => {
+                if(n.id !== 'node-syndicate' && n.id !== 'node-wallet1' && n.id !== 'node-wallet2') {
+                    n.style.opacity = "0.15";
+                }
+            });
+            allEdges.forEach(e => {
+                if(!e.classList.contains('edge-upi') && !e.classList.contains('edge-transfer')) {
+                    e.style.opacity = "0.15";
+                }
+            });
+        }
+    }
+
+    // Live Instant Omni Text Matrix Target Querying
+    function executeTargetSearch(query) {
+        const q = query.toLowerCase().trim();
+        const allNodes = document.querySelectorAll('.interactive-node');
+        if(!q) {
+            allNodes.forEach(n => n.style.opacity = "1");
+            return;
+        }
+        allNodes.forEach(n => {
+            const txt = n.textContent.toLowerCase();
+            n.style.opacity = txt.includes(q) || n.id.toLowerCase().includes(q) ? "1" : "0.15";
+        });
+    }
+
+    // Advanced Automated Step Playback Logic Suite
+    function triggerInvestigationPlayback() {
+        const totalSteps = 7;
+        let activeIndex = 0;
+        
+        // Reset Progress State Pipeline
+        for(let i=0; i<totalSteps; i++) {
+            const element = document.querySelector(`.id-step-${i}`);
+            element.classList.remove('completed', 'active-processing');
+        }
+
+        // Hide node elements during initialization sequence to emulate incremental dynamic construction
+        const graphNodes = document.getElementById('graph-nodes-group');
+        const graphEdges = document.getElementById('graph-edges-group');
+        graphNodes.style.opacity = "0.15";
+        graphEdges.style.opacity = "0.05";
+
+        const intervalTimer = setInterval(() => {
+            if(activeIndex >= totalSteps) {
+                clearInterval(intervalTimer);
+                graphNodes.style.opacity = "1";
+                graphEdges.style.opacity = "1";
+                alert("AUTOMATED WORKSTATION PLAYBACK SEQUENCE RUN COMPLETED:\nForensic pipeline fully parsed. Chain of Custody hashes validated.");
+                return;
+            }
+
+            // Step configuration rendering logic states
+            const currentBadge = document.querySelector(`.id-step-${activeIndex}`);
+            if(activeIndex > 0) {
+                const previousBadge = document.querySelector(`.id-step-${activeIndex - 1}`);
+                previousBadge.classList.remove('active-processing');
+                previousBadge.classList.add('completed');
+            }
+            currentBadge.classList.add('active-processing');
+
+            // Synchronized incrementally triggered graph visibility milestones
+            if(activeIndex === 3) graphNodes.style.opacity = "0.6";
+            if(activeIndex === 4) {
+                graphNodes.style.opacity = "1";
+                graphEdges.style.opacity = "1";
+            }
+
+            activeIndex++;
+        }, 1100);
+    }
+</script>
+{% endblock %}

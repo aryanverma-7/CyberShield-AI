@@ -1,0 +1,492 @@
+{% extends "base.html" %}
+
+{% block page_title %}Command & Control GIS Operations Center{% endblock %}
+
+{% block extra_head %}
+<!-- Leaflet Engine Ingestion -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+    :root {
+        --crit-red: #ef4444;
+        --warn-orange: #f97316;
+        --intel-blue: #3b82f6;
+        --sys-green: #10b981;
+        --panel-dark: #0f172a;
+        --border-dim: rgba(255, 255, 255, 0.08);
+    }
+
+    .gis-dashboard {
+        font-family: 'JetBrains Mono', monospace, sans-serif;
+        font-size: 0.72rem;
+    }
+
+    .tactical-panel {
+        background: rgba(15, 23, 42, 0.75);
+        border: 1px solid var(--border-dim);
+        border-radius: 4px;
+        padding: 0.85rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .map-frame {
+        height: 520px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        background: #020617;
+    }
+
+    .live-feed-box {
+        height: 140px;
+        overflow-y: auto;
+        scrollbar-width: thin;
+    }
+
+    .layer-pill {
+        display: block;
+        padding: 0.35rem 0.5rem;
+        background: #1e293b;
+        border: 1px solid var(--border-dim);
+        border-radius: 2px;
+        margin-bottom: 0.25rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .layer-pill:hover { background: #334155; }
+    .layer-pill input:checked + span { color: #fff; font-weight: bold; }
+
+    .alert-ticker {
+        background: linear-gradient(90deg, rgba(239,68,68,0.15) 0%, rgba(0,0,0,0) 100%);
+        border-left: 3px solid var(--crit-red);
+    }
+
+    .metric-value {
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: #ffffff;
+    }
+
+    .play-btn {
+        background: #334155;
+        border: 1px solid rgba(255,255,255,0.2);
+        color: #fff;
+        border-radius: 3px;
+        padding: 0.1rem 0.5rem;
+        cursor: pointer;
+    }
+    .play-btn:hover { background: #475569; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid gis-dashboard text-white px-2">
+
+    <!-- AI CRITICAL THREAT ALERT BANNER -->
+    <div class="alert-ticker p-2 mb-2 rounded d-flex justify-content-between align-items-center font-monospace">
+        <div>
+            <span class="badge bg-danger me-2 animate-pulse">CRITICAL ALERT</span>
+            <strong>AI PREDICTIVE ANOMALY DETECTED:</strong> Rapid spike in coercive Digital Arrest call vectors targeting Lucknow Sector (12 complaints within last 120 mins).
+        </div>
+        <button class="btn btn-xs btn-outline-danger py-0.5 px-2 font-monospace" style="font-size: 0.65rem;" onclick="dispatchTacticalTeam('Lucknow')">DEPLOY CYBER INTERVENTION FORCE</button>
+    </div>
+
+    <!-- GLOBAL EXECUTIVE SUMMARY RIBBON -->
+    <div class="row g-2 mb-2 text-center font-monospace">
+        <div class="col-md-2.4 col-sm-4 col-6"><div class="bg-dark p-2 border border-secondary rounded"><div>ACTIVE COMPLAINTS</div><div class="metric-value text-danger" id="top-total-complaints">1,482</div></div></div>
+        <div class="col-md-2.4 col-sm-4 col-6"><div class="bg-dark p-2 border border-secondary rounded"><div>ISOLATED HOTSPOTS</div><div class="metric-value text-warning">06 Zones</div></div></div>
+        <div class="col-md-2.4 col-sm-4 col-6"><div class="bg-dark p-2 border border-secondary rounded"><div>PATROL UNITS ACTIVE</div><div class="metric-value text-info">42 Units</div></div></div>
+        <div class="col-md-2.4 col-sm-4 col-6"><div class="bg-dark p-2 border border-secondary rounded"><div>COUNTERFEIT SEIZURES</div><div class="metric-value text-success">₹14.8 Lakhs</div></div></div>
+        <div class="col-md-2.4 col-sm-4 col-6"><div class="bg-dark p-2 border border-secondary rounded"><div>NCRP SYNC RATE</div><div class="metric-value" style="color:#8b5cf6;">99.2%</div></div></div>
+    </div>
+
+    <div class="row g-2">
+        <!-- LEFT CONTROL STRIP: LAYER SELECTION, RANKINGS, TREND FORECASTS -->
+        <div class="col-xl-3 col-lg-4">
+            
+            <!-- LAYER FILTER SELECTION MATRICES -->
+            <div class="tactical-panel">
+                <h6 class="text-white border-bottom border-secondary pb-1 mb-2 font-monospace" style="font-size:0.75rem;"><i class="fa-solid fa-layer-group text-info me-1"></i>Geospatial Vector Layers</h6>
+                <div class="row g-1">
+                    <div class="col-6"><label class="layer-pill"><input type="checkbox" checked id="lyr-digital-arrest" class="form-check-input me-1" onchange="toggleLayerGroup()"> <span>Digital Arrest</span></label></div>
+                    <div class="col-6"><label class="layer-pill"><input type="checkbox" checked id="lyr-upi-fraud" class="form-check-input me-1" onchange="toggleLayerGroup()"> <span>UPI Fraud</span></label></div>
+                    <div class="col-6"><label class="layer-pill"><input type="checkbox" checked id="lyr-counterfeit" class="form-check-input me-1" onchange="toggleLayerGroup()"> <span>Fake Notes</span></label></div>
+                    <div class="col-6"><label class="layer-pill"><input type="checkbox" id="lyr-qr-scam" class="form-check-input me-1" onchange="toggleLayerGroup()"> <span>QR Scams</span></label></div>
+                    <div class="col-6"><label class="layer-pill"><input type="checkbox" id="lyr-crypto" class="form-check-input me-1" onchange="toggleLayerGroup()"> <span>Crypto Fraud</span></label></div>
+                    <div class="col-6"><label class="layer-pill"><input type="checkbox" checked id="lyr-stations" class="form-check-input me-1" onchange="toggleLayerGroup()"> <span>Police Units</span></label></div>
+                </div>
+            </div>
+
+            <!-- LIVE DYNAMIC HOTSPOT INTERACTIVE RANKINGS -->
+            <div class="tactical-panel">
+                <h6 class="text-white border-bottom border-secondary pb-1 mb-2 font-monospace" style="font-size:0.75rem;"><i class="fa-solid fa-arrow-trend-up text-danger me-1"></i>AI Identified Anomaly Zones</h6>
+                <div class="font-monospace" style="line-height: 1.6;">
+                    <div class="d-flex justify-content-between border-bottom border-secondary border-opacity-30 py-0.5" style="cursor:pointer;" onclick="focusGisCoordinate(28.6139, 77.2090, 'Delhi NCR')">
+                        <span class="text-white">1. Delhi NCR Sector</span><strong class="text-danger">95% Density</strong>
+                    </div>
+                    <div class="d-flex justify-content-between border-bottom border-secondary border-opacity-30 py-0.5" style="cursor:pointer;" onclick="focusGisCoordinate(26.8467, 80.9462, 'Lucknow')">
+                        <span class="text-white">2. Lucknow District</span><strong class="text-danger">92% Density</strong>
+                    </div>
+                    <div class="d-flex justify-content-between border-bottom border-secondary border-opacity-30 py-0.5" style="cursor:pointer;" onclick="focusGisCoordinate(19.0760, 72.8777, 'Mumbai')">
+                        <span class="text-white">3. Mumbai Operations Grid</span><strong class="text-warning">90% Density</strong>
+                    </div>
+                    <div class="d-flex justify-content-between border-bottom border-secondary border-opacity-30 py-0.5" style="cursor:pointer;" onclick="focusGisCoordinate(17.3850, 78.4867, 'Hyderabad')">
+                        <span class="text-white">4. Hyderabad Tech Sector</span><strong class="text-warning">85% Density</strong>
+                    </div>
+                    <div class="d-flex justify-content-between py-0.5" style="cursor:pointer;" onclick="focusGisCoordinate(25.5941, 85.1376, 'Patna')">
+                        <span class="text-white">5. Patna Rural Node</span><strong class="text-info">81% Density</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CRIME TRENDS & AI PREDICTIVE OUTLOOK FORECAST MODULES -->
+            <div class="tactical-panel mb-0">
+                <h6 class="text-white border-bottom border-secondary pb-1 mb-2 font-monospace" style="font-size:0.75rem;"><i class="fa-solid fa-chart-line text-warning me-1"></i>AI Forecast & Vector Direction (24h)</h6>
+                <div class="font-monospace text-muted mb-0" style="font-size:0.68rem;">
+                    <div class="d-flex justify-content-between py-0.5 border-bottom border-secondary border-opacity-20"><span>Digital Arrest Schemes:</span><span class="text-danger fw-bold">▲ Surge (96% Prob)</span></div>
+                    <div class="d-flex justify-content-between py-0.5 border-bottom border-secondary border-opacity-20"><span>UPI Spoof Routing:</span><span class="text-success fw-bold">▼ Decay (-4% Drop)</span></div>
+                    <div class="d-flex justify-content-between py-0.5 border-bottom border-secondary border-opacity-20"><span>Counterfeit Currency Outflows:</span><span class="text-danger fw-bold">▲ Steady (92% Prob)</span></div>
+                    <div class="d-flex justify-content-between py-0.5"><span>QR Redirect Nodes:</span><span class="text-warning fw-bold">━ Flatline (Stable)</span></div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- CENTER PANEL: LIVE GIS VIEWPORT & TEMPORAL ENGINE CONTROL -->
+        <div class="col-xl-6 col-lg-8">
+            <div class="tactical-panel mb-2">
+                <div class="d-flex justify-content-between align-items-center mb-1.5">
+                    <span class="fw-bold"><i class="fa-solid fa-earth-asia text-success me-1"></i>National Crime Command Map Interface</span>
+                    <span class="text-muted font-monospace bg-dark px-2 py-0.5 rounded border border-secondary" style="font-size:0.62rem;" id="lbl-gis-status">GIS ENGINE FEED: ONLINE</span>
+                </div>
+                
+                <!-- THE DYNAMIC LEAFLET VIEWPORT FRAME CONTAINER -->
+                <div id="gis-leaflet-canvas" class="map-frame"></div>
+
+                <!-- TIMELINE ENGINE PLAYBACK CONTROLS -->
+                <div class="mt-2 bg-dark p-2 rounded border border-secondary d-flex align-items-center gap-3">
+                    <button class="play-btn font-monospace" id="btn-timeline-play" onclick="toggleTimelinePlayback()">▶ PLAY</button>
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between text-muted mb-1 font-monospace" style="font-size:0.65rem;">
+                            <span>08:00</span><span>10:00</span><span class="text-white fw-bold" id="lbl-slider-current">12:00 FRAME</span><span>14:00</span><span>16:00</span><span>18:00</span>
+                        </div>
+                        <input type="range" class="form-range" min="8" max="18" step="2" value="12" id="temporal-gis-slider" oninput="shiftTemporalGISFrame(this.value)">
+                    </div>
+                </div>
+            </div>
+
+            <!-- TACTICAL ACTION COMMAND DECK -->
+            <div class="tactical-panel mb-0 d-flex justify-content-between gap-1 flex-wrap py-2">
+                <button class="btn btn-xs btn-danger font-monospace px-2 py-1" onclick="alert('Executing Immediate Interbank Escrow Account Freeze Target Sequences...')">🧊 Freeze Accounts</button>
+                <button class="btn btn-xs btn-warning font-monospace text-dark px-2 py-1" onclick="alert('Broadcasting High-Priority Threat Alert Data Matrices to Local Jurisdictions...')">🚓 Dispatch Patrol</button>
+                <button class="btn btn-xs btn-primary font-monospace px-2 py-1" onclick="alert('Generating Programmatic Cyber Incident FIR Dossier Draft Package...')">📄 Generate FIR</button>
+                <button class="btn btn-xs btn-purple font-monospace px-2 py-1 text-white" style="background:#8b5cf6;" onclick="alert('Synchronizing Local Forensic Assets directly with central MHA Intel Hubs...')">📡 Share Intelligence</button>
+                <button class="btn btn-xs btn-outline-secondary text-white font-monospace px-2 py-1" onclick="alert('Downloading Current High-Resolution Spatial Heatmap Image...')">💾 Export Map</button>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL: CONTEXTUAL DISTRICT DATA CARDS, DISPATCH ENGINE, REALTIME ALERTS -->
+        <div class="col-xl-3 col-lg-12">
+            
+            <!-- DYNAMIC CONTEXTUAL JURISDICTION DATA CARD -->
+            <div class="tactical-panel border-top border-2 border-info" id="district-dossier-wrapper">
+                <h6 class="text-white font-monospace mb-1 fw-bold" style="font-size:0.75rem;"><i class="fa-solid fa-building-shield text-info me-1"></i>District Intelligence Profile</h6>
+                <div id="district-dossier-view">
+                    <div class="p-3 text-center text-muted font-monospace bg-dark rounded border border-secondary border-opacity-50 my-1">
+                        Select an active marker on the map or click the Anomaly Zone listing to mount deep operational intelligence metrics.
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI DISPATCH & RESOURCE OPTIMIZATION ALLOCATION RECOMMENDATIONS -->
+            <div class="tactical-panel border-top border-2 border-purple" style="border-color:#8b5cf6 !important; background: rgba(139, 92, 246, 0.03);">
+                <h6 class="text-white font-monospace mb-1 fw-bold" style="font-size:0.75rem;"><i class="fa-solid fa-microchip-ai text-purple me-1" style="color:#8b5cf6;"></i>Patrol & Dispatch Optimizer</h6>
+                <div class="bg-dark p-2 rounded border border-secondary font-monospace text-muted mb-2" style="font-size:0.68rem;" id="patrol-recommendation-box">
+                    <span class="d-block text-white fw-bold mb-1"><i class="fa-solid fa-truck-velocity text-warning me-1"></i>AI Recommendation Strategy:</span>
+                    Awaiting targeted coordinate validation profile initialization maps.
+                </div>
+                <!-- DETAILED TACTICAL RESOURCE COUNTER METRIC LIST -->
+                <div class="row g-1 text-center font-monospace" style="font-size: 0.65rem; font-weight: bold;">
+                    <div class="col-3 bg-dark p-1 border border-secondary text-muted"><span class="d-block text-white">12</span>Vans</div>
+                    <div class="col-3 bg-dark p-1 border border-secondary text-muted"><span class="d-block text-white">22</span>Cyber Off.</div>
+                    <div class="col-3 bg-dark p-1 border border-secondary text-muted"><span class="d-block text-white">03</span>Drones</div>
+                    <div class="col-3 bg-dark p-1 border border-secondary text-muted"><span class="d-block text-white">05</span>Forensics</div>
+                </div>
+            </div>
+
+            <!-- SCROLLING HIGH SPEED LIVE SYSTEM FEED -->
+            <div class="tactical-panel mb-0">
+                <div class="d-flex justify-content-between align-items-center border-bottom border-secondary pb-1 mb-2 font-monospace">
+                    <span class="fw-bold text-success"><i class="fa-solid fa-satellite text-success me-1"></i>Live Incident Feed</span>
+                    <span class="text-muted" style="font-size:0.6rem;">NCRP Realtime Stream</span>
+                </div>
+                <div class="live-feed-box font-monospace text-muted" id="realtime-incident-stream" style="font-size: 0.68rem; line-height: 1.45;">
+                    <div><span class="text-info">[13:21]</span> Delhi NCR: <span class="text-warning">QR Redirect Fraud</span> tracked to IP Node</div>
+                    <div><span class="text-info">[13:24]</span> Lucknow Sector: <span class="text-danger">Counterfeit Currency</span> ₹500 Seizure Event</div>
+                    <div><span class="text-info">[13:26]</span> Mumbai Grid: <span class="text-warning">UPI Mule Intercept</span> confirmed via bank API</div>
+                    <div><span class="text-info">[13:30]</span> Kanpur Central: <span class="text-purple">Deepfake Voice Scam</span> vector flagged</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    let mapInstance = null;
+    let mapMarkersArray = [];
+    let intelligenceVectorLine = null;
+    let playbackInterval = null;
+
+    const geoDistrictRepository = {
+        'Delhi NCR': {
+            title: "Delhi National Capital Command Region",
+            score: "95% CRITICAL DENSITY",
+            nearestStation: "New Delhi Cyber Crime HQ",
+            assignedOfficer: "DCP A. Verma, IPS",
+            metrics: [
+                { k: "Active Total Complaints", v: "482 Filings" },
+                { k: "Digital Arrest Cases", v: "182 Incidents" },
+                { k: "Counterfeit Seized Notes", v: "12 Incidents (₹4.2L)" },
+                { k: "UPI Escrow Diverts", v: "144 Logged Events" },
+                { k: "QR Scam Redirections", v: "44 Vectors Isolated" }
+            ],
+            routeCoordinates: [
+                [28.6139, 77.2090], 
+                [26.8467, 80.9462], 
+                [26.4499, 80.3319]  
+            ],
+            spread: "Delhi NCR Node ➔ Noida Grid ➔ NCRP Gateway Routing Matrix",
+            patrolRecommendation: "Deploy 6 Patrol Interceptors + Establish NCR Boundary Node Blocks."
+        },
+        'Lucknow': {
+            title: "Lucknow Regional Cyber Command Sector",
+            score: "92% HIGH RADIAL RISK",
+            nearestStation: "Hazratganj Cyber Cell Hub",
+            assignedOfficer: "Inspector K. P. Singh",
+            metrics: [
+                { k: "Active Total Complaints", v: "241 Filings" },
+                { k: "Digital Arrest Cases", v: "122 Incidents" },
+                { k: "Counterfeit Seized Notes", v: "42 Seizure Operations" },
+                { k: "UPI Escrow Diverts", v: "32 Logged Events" },
+                { k: "QR Scam Redirections", v: "45 Vectors Isolated" }
+            ],
+            routeCoordinates: [
+                [26.8467, 80.9462], 
+                [26.4499, 80.3319], 
+                [25.4358, 81.8463], 
+                [28.6139, 77.2090]  
+            ],
+            spread: "Lucknow Core Node ➔ Kanpur Central Grid ➔ Prayagraj Sector ➔ NCRP Terminal Link",
+            patrolRecommendation: "Deploy 4 Patrol Vehicles immediately to Sector 4 Hub coordinates."
+        },
+        'Mumbai': {
+            title: "Mumbai Financial Capital Operations Grid",
+            score: "90% COMPROMISED CHANNELS",
+            nearestStation: "BKC Cyber Enforcement Wing",
+            assignedOfficer: "ACP Priya Sharma",
+            metrics: [
+                { k: "Active Total Complaints", v: "390 Filings" },
+                { k: "Digital Arrest Cases", v: "94 Incidents" },
+                { k: "Counterfeit Seized Notes", v: "18 Seizure Operations" },
+                { k: "UPI Escrow Diverts", v: "210 Logged Events" },
+                { k: "QR Scam Redirections", v: "72 Vectors Isolated" }
+            ],
+            routeCoordinates: [
+                [19.0760, 72.8777], 
+                [18.5204, 73.8567], 
+                [28.6139, 77.2090]  
+            ],
+            spread: "Mumbai Hub Node ➔ Pune Operations Grid Sector [81% Threat Propagation Risk]",
+            patrolRecommendation: "Isolate local exchange gateways + Route 3 Forensic Mobile Vans."
+        }
+    };
+
+    document.addEventListener("DOMContentLoaded", () => {
+        mapInstance = L.map('gis-leaflet-canvas').setView([23.5937, 78.9629], 5);
+        
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; CartoDB'
+        }).addTo(mapInstance);
+
+        toggleLayerGroup();
+        launchLiveIncidentStreamSimulator();
+        selectDistrictProfileDirect('Lucknow');
+    });
+
+    function toggleLayerGroup() {
+        mapMarkersArray.forEach(m => mapInstance.removeLayer(m));
+        mapMarkersArray = [];
+
+        const showDigitalArrest = document.getElementById('lyr-digital-arrest').checked;
+        const showUPI = document.getElementById('lyr-upi-fraud').checked;
+        const showCounterfeit = document.getElementById('lyr-counterfeit').checked;
+        const showStations = document.getElementById('lyr-stations').checked;
+
+        const dynamicHotspotPoints = [
+            { lat: 28.6139, lng: 77.2090, label: "Delhi NCR Command Sector", type: "digital", color: "#ef4444", key: "Delhi NCR" },
+            { lat: 26.8467, lng: 80.9462, label: "Lucknow Hotspot Hub", type: "currency", color: "#10b981", key: "Lucknow" },
+            { lat: 19.0760, lng: 72.8777, label: "Mumbai Financial Endpoint Grid", type: "upi", color: "#f97316", key: "Mumbai" }
+        ];
+
+        dynamicHotspotPoints.forEach(loc => {
+            if ((loc.type === 'digital' && showDigitalArrest) ||
+                (loc.type === 'upi' && showUPI) ||
+                (loc.type === 'currency' && showCounterfeit)) {
+                
+                let radiusWeight = 16;
+                const sliderVal = parseInt(document.getElementById('temporal-gis-slider').value);
+                radiusWeight += (sliderVal - 12) * 2;
+
+                let markerNode = L.circleMarker([loc.lat, loc.lng], {
+                    radius: radiusWeight,
+                    fillColor: loc.color,
+                    color: loc.color,
+                    weight: 2,
+                    opacity: 0.9,
+                    fillOpacity: 0.35
+                }).addTo(mapInstance);
+
+                markerNode.on('click', () => {
+                    selectDistrictProfileDirect(loc.key);
+                });
+
+                markerNode.bindPopup(`<b>${loc.label}</b><br><span style='color:#3b82f6; text-decoration:underline; cursor:pointer;'>Mount Tactical Panel Telemetry</span>`);
+                mapMarkersArray.push(markerNode);
+            }
+        });
+
+        if(showStations) {
+            const staticStations = [
+                { lat: 26.8500, lng: 80.9400, info: "🚓 Hazratganj Cyber Cell Core" },
+                { lat: 28.6200, lng: 77.2100, info: "🚓 Central Command Node Unit" }
+            ];
+            staticStations.forEach(st => {
+                let stMarker = L.circleMarker([st.lat, st.lng], {
+                    radius: 6,
+                    fillColor: '#3b82f6',
+                    color: '#ffffff',
+                    weight: 1,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                }).addTo(mapInstance);
+                stMarker.bindPopup(`<b>Station Node:</b><br>${st.info}`);
+                mapMarkersArray.push(stMarker);
+            });
+        }
+    }
+
+    function focusGisCoordinate(lat, lng, districtName) {
+        mapInstance.setView([lat, lng], 7);
+        selectDistrictProfileDirect(districtName);
+    }
+
+    function selectDistrictProfileDirect(name) {
+        const target = geoDistrictRepository[name];
+        if(!target) return;
+
+        let htmlBlock = `
+            <div class="mb-2 font-monospace">
+                <span class="d-block text-white fw-bold fs-6 mb-0.5">${target.title}</span>
+                <div class="text-danger fw-bold font-monospace mb-1" style="font-size:0.75rem;">⚡ MATRIX DENSITY: ${target.score}</div>
+            </div>
+            <div class="p-2 bg-dark rounded border border-secondary border-opacity-60 mb-2 font-monospace" style="font-size:0.68rem; line-height: 1.4;">
+                <span class="d-block text-white">🏢 <b>Nearest Command Post:</b> ${target.nearestStation}</span>
+                <span class="d-block text-warning">👮 <b>Assigned Tactician:</b> ${target.assignedOfficer}</span>
+            </div>
+            <table class="table table-sm table-dark table-borderless font-monospace mb-2" style="font-size: 0.7rem; border-top: 1px solid rgba(255,255,255,0.06);">
+                <tbody>
+        `;
+        
+        // Clean JS data rendering avoids string parsing conflicts
+        target.metrics.forEach(m => {
+            htmlBlock += `<tr><td class="text-muted py-0.5">${m.k}:</td><td class="text-white py-0.5 fw-bold text-end">${m.v}</td></tr>`;
+        });
+        htmlBlock += `</tbody></table>`;
+
+        htmlBlock += `
+            <div class="p-1.5 bg-dark border border-secondary rounded font-monospace text-muted mb-2" style="font-size:0.65rem;">
+                <strong class="text-info d-block mb-0.5">📡 Inter-District Data Path Vector:</strong>
+                ${target.spread}
+            </div>
+        `;
+        document.getElementById('district-dossier-view').innerHTML = htmlBlock;
+
+        let strategyHTML = `
+            <span class="d-block text-white fw-bold mb-1"><i class="fa-solid fa-truck-velocity text-warning me-1"></i>AI Recommendation Strategy:</span>
+            ${target.patrolRecommendation}
+        `;
+        document.getElementById('patrol-recommendation-box').innerHTML = strategyHTML;
+
+        if (intelligenceVectorLine) {
+            mapInstance.removeLayer(intelligenceVectorLine);
+        }
+        
+        intelligenceVectorLine = L.polyline(target.routeCoordinates, {
+            color: '#8b5cf6',
+            weight: 3,
+            opacity: 0.85,
+            dashArray: '8, 8'
+        }).addTo(mapInstance);
+    }
+
+    function shiftTemporalGISFrame(frameHour) {
+        document.getElementById('lbl-slider-current').innerText = `${String(frameHour).padStart(2, '0')}:00 INTERCEPT`;
+        document.getElementById('lbl-gis-status').innerText = `GIS SYSTEM RUNTIME FRAME: ${frameHour}:00 IST`;
+        
+        const runtimeSkewCalc = Math.floor(1100 + (frameHour * 54));
+        document.getElementById('top-total-complaints').innerText = runtimeSkewCalc.toLocaleString();
+        
+        toggleLayerGroup();
+    }
+
+    function toggleTimelinePlayback() {
+        const playBtn = document.getElementById('btn-timeline-play');
+        const slider = document.getElementById('temporal-gis-slider');
+
+        if (playbackInterval) {
+            clearInterval(playbackInterval);
+            playbackInterval = null;
+            playBtn.innerText = "▶ PLAY";
+        } else {
+            playBtn.innerText = "⏸ PAUSE";
+            playbackInterval = setInterval(() => {
+                let currentVal = parseInt(slider.value);
+                currentVal = currentVal >= 18 ? 8 : currentVal + 2;
+                slider.value = currentVal;
+                shiftTemporalGISFrame(currentVal);
+            }, 1400);
+        }
+    }
+
+    function dispatchTacticalTeam(sectorName) {
+        alert(`TACTICAL ENFORCEMENT PROTOCOL OUTFLOW DEPLOYED:\n\nCyber Patrol Interceptor Unit routes assigned to ${sectorName} Grid Coordinates.\nTransmission metrics updated across NCRP Central Registers.`);
+    }
+
+    function launchLiveIncidentStreamSimulator() {
+        const mockStreamPhrases = [
+            "Lucknow Node: Counterfeit ₹500 batch detected via retail terminal interface",
+            "Delhi Central: Inbound VoIP spoof block containing high risk threat parameters isolated",
+            "Mumbai Grid: Mule withdrawal attempt intercepted at physical ATM checkpoint location",
+            "Patna Rural: Rapid transaction velocity spike matching systemic WhatsApp scam parameters",
+            "Hyderabad Grid: Massive automated device token registration batch dropped via proxy tunnels"
+        ];
+        
+        const feedContainer = document.getElementById('realtime-incident-stream');
+        
+        setInterval(() => {
+            const dateObj = new Date();
+            const timeString = `${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')}:${String(dateObj.getSeconds()).padStart(2, '0')}`;
+            const selectedPhrase = mockStreamPhrases[Math.floor(Math.random() * mockStreamPhrases.length)];
+            
+            const newRow = document.createElement('div');
+            newRow.innerHTML = `<span class="text-info">[${timeString}]</span> <span class="text-white">${selectedPhrase}</span>`;
+            
+            feedContainer.prepend(newRow);
+            if(feedContainer.children.length > 20) {
+                feedContainer.removeChild(feedContainer.lastChild);
+            }
+        }, 4000);
+    }
+</script>
+{% endblock %}
