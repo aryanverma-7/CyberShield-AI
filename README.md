@@ -47,19 +47,19 @@ The project combines Artificial Intelligence, Cybersecurity and Data Visualizati
 
 ## Screenshots
 
+## Screenshots
+
 ### AI Copilot
-<img src="./Screenshots/AI_Copilot.png" width="900"/>
+<img src="https://raw.githubusercontent.com/aryanverma-7/CyberShield-AI/main/Screenshots/AI_Copilot.png" width="900">
 
 ### Crime Heatmap
-<img src="./Screenshots/Crime_Heatmap.png" width="900"/>
+<img src="https://raw.githubusercontent.com/aryanverma-7/CyberShield-AI/main/Screenshots/Crime_Heatmap.png" width="900">
 
 ### Dashboard
-<img src="./Screenshots/dashboard.png" width="900"/>
+<img src="https://raw.githubusercontent.com/aryanverma-7/CyberShield-AI/main/Screenshots/dashboard.png" width="900">
 
 ### Threat Network
-<img src="./Screenshots/Threat_Network.png" width="900"/>
-
----
+<img src="https://raw.githubusercontent.com/aryanverma-7/CyberShield-AI/main/Screenshots/Threat_Network.png" width="900">
 
 # Installation
 
