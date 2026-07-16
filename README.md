@@ -1,6 +1,6 @@
 # CyberShield AI
 
-> AI-powered Law Enforcement Intelligence Platform developed for the ET Government Hackathon.
+> AI-powered Law Enforcement Intelligence Platform developed for the ET Hackathon.
 
 ![Python](https://img.shields.io/badge/Python-3.11-blue)
 ![Flask](https://img.shields.io/badge/Flask-Web%20Framework-black)
